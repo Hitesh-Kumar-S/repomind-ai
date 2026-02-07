@@ -1,6 +1,7 @@
 package com.projectanalyzer.project_analyzer.service;
 
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -10,8 +11,10 @@ import java.util.Base64;
 @Service
 public class GitHubService {
 
-    // Threshold to decide whether README is meaningful
     private static final int MIN_README_LENGTH = 200;
+
+    @Value("${github.token:}")
+    private String githubToken;
 
     public String fetchReadme(String repoUrl) {
         try {
@@ -19,17 +22,14 @@ public class GitHubService {
                 return "INVALID_URL";
             }
 
-            // 🔹 Normalize input
+            // Normalize URL
             repoUrl = repoUrl.trim();
-
             if (repoUrl.endsWith("/")) {
                 repoUrl = repoUrl.substring(0, repoUrl.length() - 1);
             }
-
             if (repoUrl.endsWith(".git")) {
                 repoUrl = repoUrl.substring(0, repoUrl.length() - 4);
             }
-
             if (!repoUrl.startsWith("https://github.com/")) {
                 return "INVALID_URL";
             }
@@ -47,10 +47,14 @@ public class GitHubService {
 
             RestTemplate restTemplate = new RestTemplate();
 
-            // ✅ Required GitHub headers
             HttpHeaders headers = new HttpHeaders();
             headers.set("User-Agent", "Project-Analyzer-App");
             headers.set("Accept", "application/vnd.github.v3+json");
+
+            // ✅ Add GitHub token if present (prevents rate limiting)
+            if (githubToken != null && !githubToken.isBlank()) {
+                headers.setBearerAuth(githubToken);
+            }
 
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
@@ -68,16 +72,13 @@ public class GitHubService {
                     Base64.getDecoder().decode(encodedContent.replaceAll("\\s", ""))
             ).trim();
 
-            // ⚠️ Weak README detection
             if (decodedReadme.length() < MIN_README_LENGTH) {
                 return "WEAK_README";
             }
 
-            // ✅ Valid README
             return decodedReadme;
 
         } catch (Exception e) {
-            // ❌ README not found or repository inaccessible
             return "README_NOT_FOUND";
         }
     }
