@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Project Analyzer</title>
+
+    <!-- Markdown Renderer -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        :root {
+            --bg-main: #f4f7ff;
+            --bg-side: linear-gradient(180deg, #667eea, #764ba2);
+            --card: #ffffff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --primary: #5b6cff;
+            --accent: #22c55e;
+        }
+
+        body.dark {
+            --bg-main: #0f172a;
+            --bg-side: linear-gradient(180deg, #1e293b, #020617);
+            --card: #111827;
+            --text: #e5e7eb;
+            --muted: #9ca3af;
+            --primary: #8b9cff;
+            --accent: #4ade80;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Segoe UI", Inter, system-ui, sans-serif;
+            background: var(--bg-main);
+            color: var(--text);
+            display: flex;
+        }
+
+        /* SIDE PANELS */
+        .side {
+            width: 8%;
+            background: var(--bg-side);
+        }
+
+        /* MAIN AREA */
+        .main {
+            width: 84%;
+            display: flex;
+            justify-content: center;
+            padding: 40px 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background: var(--card);
+            border-radius: 18px;
+            padding: 36px 42px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+        }
+
+        /* HEADER */
+        .top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 36px;
+            margin: 0;
+        }
+
+        .toggle {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--text);
+            padding: 8px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .subtitle {
+            margin-top: 10px;
+            font-size: 18px;
+            color: var(--muted);
+        }
+
+        /* INSTRUCTIONS */
+        .instructions {
+            margin-top: 30px;
+            padding: 20px;
+            border-left: 6px solid var(--primary);
+            background: rgba(91,108,255,0.08);
+            border-radius: 12px;
+            font-size: 16px;
+        }
+
+        .instructions h3 {
+            margin-top: 0;
+            font-size: 20px;
+        }
+
+        .instructions ul {
+            padding-left: 20px;
+        }
+
+        /* INPUT */
+        .input-section {
+            margin-top: 30px;
+            display: flex;
+            gap: 12px;
+        }
+
+        input {
+            flex: 1;
+            padding: 14px;
+            font-size: 17px;
+            border-radius: 10px;
+            border: 1px solid #c7c9d1;
+        }
+
+        button {
+            padding: 14px 24px;
+            font-size: 17px;
+            border-radius: 10px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+        }
+
+        /* SPINNER */
+        .spinner {
+            display: none;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .spinner div {
+            width: 42px;
+            height: 42px;
+            border: 5px solid #c7c9d1;
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* RESULT */
+        .result-wrapper {
+            margin-top: 35px;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+        }
+
+        .result {
+            background: var(--bg-main);
+            padding: 26px;
+            border-radius: 14px;
+            font-size: 18px;
+            line-height: 1.8;
+            max-height: 480px;
+            overflow-y: auto;
+        }
+
+        .result h2 {
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 6px;
+        }
+
+        /* FOOTER */
+        .footer {
+            margin-top: 35px;
+            text-align: center;
+            font-size: 15px;
+            color: var(--muted);
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="side"></div>
+
+<div class="main">
+    <div class="container">
+
+        <div class="top">
+            <h1>🚀 Project Analyzer</h1>
+            <button class="toggle" onclick="toggleTheme()">🌙 / ☀️</button>
+        </div>
+
+        <p class="subtitle">
+            Turn your GitHub project into an interview-ready explanation in seconds.
+        </p>
+
+        <!-- INSTRUCTIONS -->
+        <div class="instructions">
+            <h3>📌 Repository Requirements</h3>
+            <ul>
+                <li>The repository <strong>must be public</strong>.</li>
+                <li>A well-written <strong>README.md is mandatory</strong>.</li>
+                <li>The README should clearly describe:
+                    <ul>
+                        <li>Project purpose and problem statement</li>
+                        <li>Tech stack used</li>
+                        <li>Architecture or flow</li>
+                        <li>Features and improvements</li>
+                    </ul>
+                </li>
+                <li>This analyzer works best with <strong>structured, professional READMEs</strong>.</li>
+            </ul>
+        </div>
+
+        <!-- INPUT -->
+        <div class="input-section">
+            <input id="repoUrl" placeholder="https://github.com/username/repository">
+            <button id="analyzeBtn" onclick="analyzeProject()">Analyze</button>
+        </div>
+
+        <!-- LOADING -->
+        <div class="spinner" id="spinner">
+            <div></div>
+            <p>Analyzing project…</p>
+        </div>
+
+        <!-- RESULT -->
+        <div class="result-wrapper">
+            <div class="actions">
+                <button onclick="copyResult()">📋 Copy</button>
+            </div>
+            <div id="result" class="result">
+                <p style="color: var(--muted)">
+                    The analyzed project details will appear here.
+                </p>
+            </div>
+        </div>
+
+        <div class="footer">
+            Built with Spring Boot • GitHub API • LLM Integration
+        </div>
+
+    </div>
+</div>
+
+<div class="side"></div>
+
+<script>
+    function analyzeProject() {
+        const repoUrl = document.getElementById("repoUrl").value.trim();
+        const result = document.getElementById("result");
+        const spinner = document.getElementById("spinner");
+        const button = document.getElementById("analyzeBtn");
+
+        if (!repoUrl) {
+            alert("Please enter a GitHub repository URL");
+            return;
+        }
+
+        spinner.style.display = "block";
+        button.disabled = true;
+        result.innerHTML = "";
+
+        fetch("/analyze", {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: repoUrl
+        })
+        .then(res => res.text())
+        .then(text => {
+            result.innerHTML = marked.parse(text);
+            spinner.style.display = "none";
+            button.disabled = false;
+        })
+        .catch(() => {
+            result.innerHTML = "<p>❌ Error occurred while analyzing the project.</p>";
+            spinner.style.display = "none";
+            button.disabled = false;
+        });
+    }
+
+    function copyResult() {
+        const text = document.getElementById("result").innerText;
+        navigator.clipboard.writeText(text);
+        alert("Analysis copied to clipboard!");
+    }
+
+    function toggleTheme() {
+        document.body.classList.toggle("dark");
+    }
+</script>
+
+</body>
+</html>
