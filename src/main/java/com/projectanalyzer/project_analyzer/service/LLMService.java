@@ -76,13 +76,43 @@ Use the following structure:
 - Keep it **concise, structured, and easy to understand**.
 - Emphasize **key technical decisions** in bold.
 
-### **6. Possible Improvements or Extensions**
+### **6. README Quality Score**
+-Evaluate the README based ONLY on available content.
+-Make sure that the heading are bolded. 
+-Scoring Criteria (0–10 each):
+
+-Clarity
+-Completeness
+-Structure
+-Setup Instructions
+-Examples / Usage
+
+Format (STRICT):
+
+- **Clarity**: X/10  
+- **Completeness**: X/10  
+- **Structure**: X/10  
+- **Setup Instructions**: X/10  
+- **Examples/Usage**: X/10  
+
+**Final Score**: Y/10
+
+-Keep the evaluation fair, realistic, and encouraging.
+-If something is missing, reflect it in the score gently.
+
+### **7. Missing or Weak Documentation Sections**
+-Identify important sections that are missing or insufficient, such as:
+-Setup Instructions
+-Usage Examples
+-Architecture
+-Contribution Guidelines
+-License
+-Present it in a helpful way:
+-"The README could be improved by adding: ..."
+
+### **8. Possible Improvements or Extensions**
 - Suggest **realistic and constructive improvements** based on the current scope.
 - Avoid speculative or overly advanced features if the README does not suggest them.
-
-### **7. Documentation Quality (Optional Insight)**
-- Briefly comment on the **clarity and completeness of the README**.
-- Phrase suggestions positively and constructively.
 
 ### **Positive Closing Note**
 - End with a **supportive and encouraging statement** about the project.
