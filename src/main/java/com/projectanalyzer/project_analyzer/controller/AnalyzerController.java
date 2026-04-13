@@ -2,6 +2,7 @@ package com.projectanalyzer.project_analyzer.controller;
 
 import com.projectanalyzer.project_analyzer.service.GitHubService;
 import com.projectanalyzer.project_analyzer.service.GitLabService;
+import com.projectanalyzer.project_analyzer.service.BitbucketService;
 import com.projectanalyzer.project_analyzer.service.LLMService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,9 @@ public class AnalyzerController {
     private GitLabService gitLabService;
 
     @Autowired
+    private BitbucketService bitbucketService;
+
+    @Autowired
     private LLMService llmService;
 
     @PostMapping("/analyze")
@@ -24,22 +28,27 @@ public class AnalyzerController {
 
         String readme;
 
-        // 🔥 Platform detection
-        if (repoUrl.contains("github.com")) {
-            readme = gitHubService.fetchReadme(repoUrl);
-        } else if (repoUrl.contains("gitlab.com")) {
-            readme = gitLabService.fetchReadme(repoUrl);
-        } else {
-            return """
+if (repoUrl.contains("github.com")) {
+    readme = gitHubService.fetchReadme(repoUrl);
+
+} else if (repoUrl.contains("gitlab.com")) {
+    readme = gitLabService.fetchReadme(repoUrl);
+
+} else if (repoUrl.contains("bitbucket.org")) {
+    readme = bitbucketService.fetchReadme(repoUrl);
+
+} else {
+    return """
 ❌ **Unsupported Repository Platform**
 
 Currently supported platforms:
 - GitHub
 - GitLab
+- Bitbucket
 
 Please provide a valid repository URL.
 """;
-        }
+}
 
         // ❌ Invalid URL (only applies to GitHub for now)
         if ("INVALID_URL".equals(readme)) {

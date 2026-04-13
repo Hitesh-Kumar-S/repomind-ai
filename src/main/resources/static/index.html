@@ -28,9 +28,7 @@
             --accent: #4ade80;
         }
 
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
@@ -41,13 +39,8 @@
             display: flex;
         }
 
-        /* SIDE PANELS */
-        .side {
-            width: 8%;
-            background: var(--bg-side);
-        }
+        .side { width: 8%; background: var(--bg-side); }
 
-        /* MAIN AREA */
         .main {
             width: 84%;
             display: flex;
@@ -64,26 +57,20 @@
             box-shadow: 0 30px 60px rgba(0,0,0,0.2);
         }
 
-        /* HEADER */
         .top {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        h1 {
-            font-size: 36px;
-            margin: 0;
-        }
+        h1 { font-size: 36px; margin: 0; }
 
         .toggle {
             background: transparent;
             border: 2px solid var(--primary);
-            color: var(--text);
             padding: 8px 14px;
             border-radius: 10px;
             cursor: pointer;
-            font-size: 16px;
         }
 
         .subtitle {
@@ -92,26 +79,25 @@
             color: var(--muted);
         }
 
-        /* INSTRUCTIONS */
         .instructions {
             margin-top: 30px;
             padding: 20px;
             border-left: 6px solid var(--primary);
             background: rgba(91,108,255,0.08);
             border-radius: 12px;
-            font-size: 16px;
         }
 
-        .instructions h3 {
-            margin-top: 0;
-            font-size: 20px;
+        .instructions h4 {
+            margin-top: 15px;
+            color: var(--primary);
         }
 
-        .instructions ul {
-            padding-left: 20px;
+        .instructions hr {
+            margin: 20px 0;
+            border: none;
+            border-top: 1px solid #ccc;
         }
 
-        /* INPUT */
         .input-section {
             margin-top: 30px;
             display: flex;
@@ -128,7 +114,6 @@
 
         button {
             padding: 14px 24px;
-            font-size: 17px;
             border-radius: 10px;
             border: none;
             background: var(--primary);
@@ -136,11 +121,6 @@
             cursor: pointer;
         }
 
-        button:disabled {
-            opacity: 0.6;
-        }
-
-        /* SPINNER */
         .spinner {
             display: none;
             text-align: center;
@@ -161,10 +141,7 @@
             to { transform: rotate(360deg); }
         }
 
-        /* RESULT */
-        .result-wrapper {
-            margin-top: 35px;
-        }
+        .result-wrapper { margin-top: 35px; }
 
         .actions {
             display: flex;
@@ -187,7 +164,6 @@
             padding-bottom: 6px;
         }
 
-        /* FOOTER */
         .footer {
             margin-top: 35px;
             text-align: center;
@@ -202,111 +178,140 @@
 <div class="side"></div>
 
 <div class="main">
-    <div class="container">
+<div class="container">
 
-        <div class="top">
-            <h1>🚀 Project Analyzer</h1>
-            <button class="toggle" onclick="toggleTheme()">🌙 / ☀️</button>
-        </div>
+    <div class="top">
+        <h1>🚀 Project Analyzer</h1>
+        <button class="toggle" onclick="toggleTheme()">🌙 / ☀️</button>
+    </div>
 
-        <p class="subtitle">
-            Turn your GitHub project into an interview-ready explanation in seconds.
-        </p>
+    <p class="subtitle">
+        Analyze <strong>GitHub</strong>, <strong>GitLab</strong>, and <strong>Bitbucket</strong> repositories and get interview-ready insights instantly.
+    </p>
 
-        <!-- INSTRUCTIONS -->
-        <div class="instructions">
-            <h3>📌 Repository Requirements</h3>
-            <ul>
-                <li>The repository <strong>must be public</strong>.</li>
-                <li>A well-written <strong>README.md is mandatory</strong>.</li>
-                <li>The README should clearly describe:
-                    <ul>
-                        <li>Project purpose and problem statement</li>
-                        <li>Tech stack used</li>
-                        <li>Architecture or flow</li>
-                        <li>Features and improvements</li>
-                    </ul>
-                </li>
-                <li>This analyzer works best with <strong>structured, professional READMEs</strong>.</li>
-            </ul>
-        </div>
+    <!-- UPDATED INSTRUCTIONS -->
+    <div class="instructions">
 
-        <!-- INPUT -->
-        <div class="input-section">
-            <input id="repoUrl" placeholder="https://github.com/username/repository">
-            <button id="analyzeBtn" onclick="analyzeProject()">Analyze</button>
-        </div>
+        <h3>📌 General Requirements</h3>
+        <ul>
+            <li>The repository must be <strong>public</strong>.</li>
+            <li>A <strong>README.md</strong> must be present in the <strong>root directory</strong>.</li>
+            <li>The default branch should be <strong>main</strong> or <strong>master</strong>.</li>
+            <li>The README should include:
+                <ul>
+                    <li><strong>Project overview</strong></li>
+                    <li><strong>Tech stack</strong></li>
+                    <li><strong>Architecture</strong></li>
+                    <li><strong>Features</strong></li>
+                </ul>
+            </li>
+        </ul>
 
-        <!-- LOADING -->
-        <div class="spinner" id="spinner">
-            <div></div>
-            <p>Analyzing project…</p>
-        </div>
+        <hr>
 
-        <!-- RESULT -->
-        <div class="result-wrapper">
-            <div class="actions">
-                <button onclick="copyResult()">📋 Copy</button>
-            </div>
-            <div id="result" class="result">
-                <p style="color: var(--muted)">
-                    The analyzed project details will appear here.
-                </p>
-            </div>
-        </div>
+        <h3>🌐 Platform Instructions</h3>
 
-        <div class="footer">
-            Built with Spring Boot • GitHub API • LLM Integration
-        </div>
+        <h4>🐙 GitHub</h4>
+        <ul>
+            <li><strong>https://github.com/username/repository</strong></li>
+            <li>README in <strong>root</strong></li>
+            <li>Branch: <strong>main</strong> or <strong>master</strong></li>
+        </ul>
+
+        <h4>🦊 GitLab</h4>
+        <ul>
+            <li><strong>https://gitlab.com/username/repository</strong></li>
+            <li>Repository must be <strong>public</strong></li>
+            <li>README in <strong>root</strong></li>
+            <li>Branch: <strong>main</strong> or <strong>master</strong></li>
+        </ul>
+
+        <h4>🪣 Bitbucket</h4>
+        <ul>
+            <li><strong>https://bitbucket.org/workspace/repository</strong></li>
+            <li>Do NOT include <strong>/src/branch/</strong></li>
+            <li>README in <strong>root</strong></li>
+            <li>Branch: <strong>main</strong> or <strong>master</strong></li>
+        </ul>
 
     </div>
+
+    <!-- INPUT -->
+    <div class="input-section">
+        <input id="repoUrl" placeholder="Enter repository URL">
+        <button id="analyzeBtn" onclick="analyzeProject()">Analyze</button>
+    </div>
+
+    <!-- LOADING -->
+    <div class="spinner" id="spinner">
+        <div></div>
+        <p>Analyzing project…</p>
+    </div>
+
+    <!-- RESULT -->
+    <div class="result-wrapper">
+        <div class="actions">
+            <button onclick="copyResult()">📋 Copy</button>
+        </div>
+        <div id="result" class="result">
+            <p style="color: var(--muted)">
+                The analyzed project details will appear here.
+            </p>
+        </div>
+    </div>
+
+    <div class="footer">
+        Built with Spring Boot • Multi-Platform Support • LLM Integration
+    </div>
+
+</div>
 </div>
 
 <div class="side"></div>
 
 <script>
-    function analyzeProject() {
-        const repoUrl = document.getElementById("repoUrl").value.trim();
-        const result = document.getElementById("result");
-        const spinner = document.getElementById("spinner");
-        const button = document.getElementById("analyzeBtn");
+function analyzeProject() {
+    const repoUrl = document.getElementById("repoUrl").value.trim();
+    const result = document.getElementById("result");
+    const spinner = document.getElementById("spinner");
+    const button = document.getElementById("analyzeBtn");
 
-        if (!repoUrl) {
-            alert("Please enter a GitHub repository URL");
-            return;
-        }
-
-        spinner.style.display = "block";
-        button.disabled = true;
-        result.innerHTML = "";
-
-        fetch("/analyze", {
-            method: "POST",
-            headers: { "Content-Type": "text/plain" },
-            body: repoUrl
-        })
-        .then(res => res.text())
-        .then(text => {
-            result.innerHTML = marked.parse(text);
-            spinner.style.display = "none";
-            button.disabled = false;
-        })
-        .catch(() => {
-            result.innerHTML = "<p>❌ Error occurred while analyzing the project.</p>";
-            spinner.style.display = "none";
-            button.disabled = false;
-        });
+    if (!repoUrl) {
+        alert("Please enter a repository URL");
+        return;
     }
 
-    function copyResult() {
-        const text = document.getElementById("result").innerText;
-        navigator.clipboard.writeText(text);
-        alert("Analysis copied to clipboard!");
-    }
+    spinner.style.display = "block";
+    button.disabled = true;
+    result.innerHTML = "<p>Analyzing... ⏳</p>";
 
-    function toggleTheme() {
-        document.body.classList.toggle("dark");
-    }
+    fetch("/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: repoUrl
+    })
+    .then(res => res.text())
+    .then(text => {
+        result.innerHTML = marked.parse(text);
+        spinner.style.display = "none";
+        button.disabled = false;
+    })
+    .catch(() => {
+        result.innerHTML = "<p>❌ Error occurred while analyzing the project.</p>";
+        spinner.style.display = "none";
+        button.disabled = false;
+    });
+}
+
+function copyResult() {
+    const text = document.getElementById("result").innerText;
+    navigator.clipboard.writeText(text);
+    alert("Analysis copied!");
+}
+
+function toggleTheme() {
+    document.body.classList.toggle("dark");
+}
 </script>
 
 </body>

@@ -89,13 +89,13 @@ Use the following structure:
 
 Format (STRICT):
 
-- **Clarity**: X/10  
-- **Completeness**: X/10  
-- **Structure**: X/10  
-- **Setup Instructions**: X/10  
-- **Examples/Usage**: X/10  
+- **Clarity**: X1/10  
+- **Completeness**: X2/10  
+- **Structure**: X3/10  
+- **Setup Instructions**: X4/10  
+- **Examples/Usage**: X5/10  
 
-**Final Score**: Y/10
+**Final Score**: (X1 + X2 + X3 + X4 + X5)/10
 
 -Keep the evaluation fair, realistic, and encouraging.
 -If something is missing, reflect it in the score gently.
