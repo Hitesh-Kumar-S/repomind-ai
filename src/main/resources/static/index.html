@@ -485,15 +485,22 @@ function analyzeProject() {
     spinner.style.display = "block";
 
     fetch("/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "text/plain" },
-        body: repoUrl
-    })
-    .then(res => res.text())
-    .then(text => {
-        result.innerHTML = marked.parse(text);
-        spinner.style.display = "none";
-    });
+    method: "POST",
+    headers: { "Content-Type": "text/plain" },
+    body: repoUrl
+})
+.then(res => {
+    if (!res.ok) throw new Error("Analyze failed");
+    return res.text();
+})
+.then(text => {
+    result.innerHTML = marked.parse(text);
+    spinner.style.display = "none";
+})
+.catch(err => {
+    result.innerHTML = "❌ Error: " + err.message;
+    spinner.style.display = "none";
+});
 }
 
 function toggleTheme() {
@@ -520,18 +527,24 @@ function sendMessage() {
     addMessage("bot", "Typing...");
 
     fetch("/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            question: question,
-            strictMode: !isSmart
-        })
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+        question: question,
+        strictMode: !isSmart
     })
-    .then(res => res.text())
-    .then(answer => {
-        document.getElementById("chatBox").lastChild.remove();
-        addMessage("bot", answer);
-    });
+})
+.then(res => {
+    if (!res.ok) throw new Error("Chat failed");
+    return res.text();
+})
+.then(answer => {
+    document.getElementById("chatBox").lastChild.remove();
+    addMessage("bot", answer);
+})
+.catch(err => {
+    addMessage("bot", "❌ Error: " + err.message);
+});
 }
 </script>
 
