@@ -129,6 +129,12 @@ button {
     cursor: pointer;
 }
 
+/* DISABLED BUTTON STATE */
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 /* RESULT BOX */
 .result {
     margin-top: 15px;
@@ -305,6 +311,29 @@ body.dark .mode-toggle {
     margin-top: 10px;
     flex-shrink: 0;
 }
+
+/* COPY BUTTON ROW */
+.copy-row {
+    display: none;
+    justify-content: flex-end;
+    margin-top: 6px;
+    flex-shrink: 0;
+}
+
+.copy-btn {
+    padding: 6px 14px;
+    font-size: 12px;
+    border-radius: 8px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    cursor: pointer;
+    opacity: 0.85;
+}
+
+.copy-btn:hover {
+    opacity: 1;
+}
 </style>
 </head>
 
@@ -323,10 +352,6 @@ body.dark .mode-toggle {
         <span class="theme-icon">🌙</span>
     </div>
 </div>
-
-<!-- <p>
-    Analyze <strong>GitHub</strong>, <strong>GitLab</strong>, and <strong>Bitbucket</strong> repositories instantly.
-</p> -->
 
 <p style="font-size: 14px; color: var(--muted); line-height: 1.6;">
     Effortlessly analyze public repositories from <strong style="color: var(--text);">GitHub</strong>, 
@@ -385,10 +410,15 @@ body.dark .mode-toggle {
 
 <div class="input-section">
     <input id="repoUrl" placeholder="Enter repository URL (GitHub / GitLab / Bitbucket)">
-    <button onclick="analyzeProject()">Analyze</button>
+    <button id="analyzeBtn" onclick="analyzeProject()">Analyze</button>
 </div>
 
 <div id="spinner">⏳ Analyzing...</div>
+
+<!-- COPY BUTTON ROW -->
+<div class="copy-row" id="copyRow">
+    <button class="copy-btn" id="copyBtn" onclick="copyResult()">📋 Copy</button>
+</div>
 
 <div id="result" class="result"></div>
 
@@ -400,46 +430,39 @@ body.dark .mode-toggle {
 <h3>💬 RepoMind Copilot</h3>
 
 <div class="instructions" style="display:block;">
-    <!-- <p>👋 Ask anything about your project.</p>
-    <ul>
-        <li><span class="hl">Strict Mode</span> → Only <span class="hl">README</span>-based answers</li>
-        <li><span class="hl">Smart Mode</span> → General + advanced answers</li>
-        <li>Use <span class="hl">Smart</span> for deeper understanding</li>
-    </ul> -->
-
     <p>👋 Ask anything about your project.</p>
 
-<ul>
-    <li>
-        <span class="hl">Strict Mode</span> → Use this when you want answers strictly from the 
-        <span class="hl">README</span>.
-        <br>👉 Best for: factual answers and project-specific details.
-    </li>
+    <ul>
+        <li>
+            <span class="hl">Strict Mode</span> → Use this when you want answers strictly from the 
+            <span class="hl">README</span>.
+            <br>👉 Best for: factual answers and project-specific details.
+        </li>
 
-    <li>
-        <span class="hl">Smart Mode</span> → Uses AI knowledge beyond README.
-        <br>👉 Best for: explanations, concepts, comparisons, and improvements.
-    </li>
+        <li>
+            <span class="hl">Smart Mode</span> → Uses AI knowledge beyond README.
+            <br>👉 Best for: explanations, concepts, comparisons, and improvements.
+        </li>
 
-    <li>
-        💡 <strong>Example questions:</strong>
-        <ul>
-            <li>Strict → "What does the README say about the architecture?"</li>
-            <li>Smart → "Why is Spring Boot used here?"</li>
-            <li>Smart → "How can this project be improved?"</li>
-        </ul>
-    </li>
+        <li>
+            💡 <strong>Example questions:</strong>
+            <ul>
+                <li>Strict → "What does the README say about the architecture?"</li>
+                <li>Smart → "Why is Spring Boot used here?"</li>
+                <li>Smart → "How can this project be improved?"</li>
+            </ul>
+        </li>
 
-    <li>
-        ⚠️ If your question is not in README, 
-        <span class="hl">Strict Mode may not answer it</span>.
-    </li>
-</ul>
+        <li>
+            ⚠️ If your question is not in README, 
+            <span class="hl">Strict Mode may not answer it</span>.
+        </li>
+    </ul>
 
-<p style="margin-top:10px; font-size:13px; color:var(--muted);">
-⚠️ <strong>Note:</strong> This is an AI-generated assistant. Responses may not always be fully accurate.
-Please verify important information before relying on it.
-</p>
+    <p style="margin-top:10px; font-size:13px; color:var(--muted);">
+        ⚠️ <strong>Note:</strong> This is an AI-generated assistant. Responses may not always be fully accurate.
+        Please verify important information before relying on it.
+    </p>
 </div>
 
 <div class="mode-toggle-wrapper">
@@ -454,7 +477,7 @@ Please verify important information before relying on it.
 
 <div style="display:flex; gap:10px; margin-top:10px; flex-shrink:0;">
     <input id="chatInput" placeholder="Ask something..." style="flex:1;">
-    <button onclick="sendMessage()">Send</button>
+    <button id="sendBtn" onclick="sendMessage()">Send</button>
 </div>
 
 </div>
@@ -481,26 +504,58 @@ function analyzeProject() {
     const repoUrl = document.getElementById("repoUrl").value;
     const result = document.getElementById("result");
     const spinner = document.getElementById("spinner");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const copyRow = document.getElementById("copyRow");
 
+    // Disable button and show loading state
+    analyzeBtn.disabled = true;
+    analyzeBtn.textContent = "Analyzing...";
+    copyRow.style.display = "none";
     spinner.style.display = "block";
 
     fetch("/analyze", {
-    method: "POST",
-    headers: { "Content-Type": "text/plain" },
-    body: repoUrl
-})
-.then(res => {
-    if (!res.ok) throw new Error("Analyze failed");
-    return res.text();
-})
-.then(text => {
-    result.innerHTML = marked.parse(text);
-    spinner.style.display = "none";
-})
-.catch(err => {
-    result.innerHTML = "❌ Error: " + err.message;
-    spinner.style.display = "none";
-});
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: repoUrl
+    })
+    .then(res => {
+        if (!res.ok) throw new Error("Analyze failed");
+        return res.text();
+    })
+    .then(text => {
+        result.innerHTML = marked.parse(text);
+        spinner.style.display = "none";
+        copyRow.style.display = "flex";
+        // Re-enable button
+        analyzeBtn.disabled = false;
+        analyzeBtn.textContent = "Analyze";
+    })
+    .catch(err => {
+        result.innerHTML = "❌ Error: " + err.message;
+        spinner.style.display = "none";
+        copyRow.style.display = "none";
+        // Re-enable button
+        analyzeBtn.disabled = false;
+        analyzeBtn.textContent = "Analyze";
+    });
+}
+
+function copyResult() {
+    const result = document.getElementById("result");
+    const copyBtn = document.getElementById("copyBtn");
+    const text = result.innerText;
+
+    navigator.clipboard.writeText(text).then(() => {
+        copyBtn.textContent = "✅ Copied!";
+        setTimeout(() => {
+            copyBtn.textContent = "📋 Copy";
+        }, 1500);
+    }).catch(() => {
+        copyBtn.textContent = "❌ Failed";
+        setTimeout(() => {
+            copyBtn.textContent = "📋 Copy";
+        }, 1500);
+    });
 }
 
 function toggleTheme() {
@@ -518,33 +573,45 @@ function addMessage(role, text) {
 
 function sendMessage() {
     const input = document.getElementById("chatInput");
+    const sendBtn = document.getElementById("sendBtn");
     const question = input.value.trim();
     if (!question) return;
 
     addMessage("user", question);
     input.value = "";
 
+    // Disable button and show loading state
+    sendBtn.disabled = true;
+    sendBtn.textContent = "Typing...";
+
     addMessage("bot", "Typing...");
 
     fetch("/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-        question: question,
-        strictMode: !isSmart
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            question: question,
+            strictMode: !isSmart
+        })
     })
-})
-.then(res => {
-    if (!res.ok) throw new Error("Chat failed");
-    return res.text();
-})
-.then(answer => {
-    document.getElementById("chatBox").lastChild.remove();
-    addMessage("bot", answer);
-})
-.catch(err => {
-    addMessage("bot", "❌ Error: " + err.message);
-});
+    .then(res => {
+        if (!res.ok) throw new Error("Chat failed");
+        return res.text();
+    })
+    .then(answer => {
+        document.getElementById("chatBox").lastChild.remove();
+        addMessage("bot", answer);
+        // Re-enable button
+        sendBtn.disabled = false;
+        sendBtn.textContent = "Send";
+    })
+    .catch(err => {
+        document.getElementById("chatBox").lastChild.remove();
+        addMessage("bot", "❌ Error: " + err.message);
+        // Re-enable button
+        sendBtn.disabled = false;
+        sendBtn.textContent = "Send";
+    });
 }
 </script>
 

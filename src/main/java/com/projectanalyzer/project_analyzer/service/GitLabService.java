@@ -43,84 +43,101 @@ public class GitLabService implements RepositoryService {
     // ===================== FETCH README =====================
 
     @Override
-public String fetchReadme(String repoUrl) {
-    try {
-        if (repoUrl == null || !repoUrl.startsWith("https://gitlab.com/")) {
-            return "INVALID_URL";
-        }
-
-        String projectPath = repoUrl
-                .replace("https://gitlab.com/", "")
-                .replaceAll("/$", "");
-
-        String encodedPath = projectPath.replace("/", "%2F");
-
-        Integer projectId = null;
-
-        // 🔥 STEP 1: Try direct API
+    public String fetchReadme(String repoUrl) {
         try {
-            String url = "https://gitlab.com/api/v4/projects/" + encodedPath;
-
-            Map<String, Object> project =
-                    restTemplate.getForObject(url, Map.class);
-
-            projectId = (Integer) project.get("id");
-
-        } catch (Exception ignored) {}
-
-        // 🔥 STEP 2: Fallback to search
-        if (projectId == null) {
-
-            String repoName = projectPath.substring(projectPath.lastIndexOf("/") + 1);
-
-            String searchUrl =
-                    "https://gitlab.com/api/v4/projects?search=" + repoName;
-
-            List<Map<String, Object>> projects =
-                    restTemplate.getForObject(searchUrl, List.class);
-
-            if (projects != null) {
-                for (Map<String, Object> project : projects) {
-
-                    String path = (String) project.get("path");
-
-                    if (repoName.equalsIgnoreCase(path)) {
-                        projectId = (Integer) project.get("id");
-                        break;
-                    }
-                }
+            if (repoUrl == null || !repoUrl.startsWith("https://gitlab.com/")) {
+                return "INVALID_URL";
             }
-        }
 
-        // ❌ Still not found
-        if (projectId == null) {
-            return "INVALID_URL";
-        }
+            String projectPath = repoUrl
+                    .replace("https://gitlab.com/", "")
+                    .replaceAll("/$", "");
 
-        // 🔥 STEP 3: Fetch README
-        String[] branches = {"main", "master"};
+            String encodedPath = projectPath.replace("/", "%2F");
 
-        for (String branch : branches) {
+            Integer projectId = null;
+
+            // 🔥 STEP 1: Try direct API
             try {
-                String url = "https://gitlab.com/api/v4/projects/"
-                        + projectId
-                        + "/repository/files/README.md/raw?ref=" + branch;
+                String url = "https://gitlab.com/api/v4/projects/" + encodedPath;
 
-                String content = restTemplate.getForObject(url, String.class);
+                Map<String, Object> project =
+                        restTemplate.getForObject(url, Map.class);
 
-                if (content != null && !content.isEmpty()) {
-                    return content;
+                // ✅ FIX: Safe ID casting
+                Object idObj = project.get("id");
+
+                if (idObj instanceof Integer) {
+                    projectId = (Integer) idObj;
+                } else if (idObj instanceof Number) {
+                    projectId = ((Number) idObj).intValue();
                 }
 
             } catch (Exception ignored) {}
+
+            // 🔥 STEP 2: Fallback to search
+            if (projectId == null) {
+
+                String repoName = projectPath.substring(projectPath.lastIndexOf("/") + 1);
+
+                String searchUrl =
+                        "https://gitlab.com/api/v4/projects?search=" + repoName;
+
+                List<Map<String, Object>> projects =
+                        restTemplate.getForObject(searchUrl, List.class);
+
+                if (projects != null) {
+                    for (Map<String, Object> project : projects) {
+
+                        String path = (String) project.get("path");
+
+                        if (repoName.equalsIgnoreCase(path)) {
+
+                            // ✅ FIX: Safe ID casting here too
+                            Object idObj = project.get("id");
+
+                            if (idObj instanceof Integer) {
+                                projectId = (Integer) idObj;
+                            } else if (idObj instanceof Number) {
+                                projectId = ((Number) idObj).intValue();
+                            }
+
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // ❌ Still not found
+            if (projectId == null) {
+                return "INVALID_URL";
+            }
+
+            // 🔥 STEP 3: Fetch README
+            // ✅ FIX: Added develop branch
+            String[] branches = {"main", "master", "develop"};
+
+            for (String branch : branches) {
+                try {
+                    String url = "https://gitlab.com/api/v4/projects/"
+                            + projectId
+                            + "/repository/files/README.md/raw?ref=" + branch;
+
+                    String content = restTemplate.getForObject(url, String.class);
+
+                    if (content != null && !content.isEmpty()) {
+                        return content;
+                    }
+
+                } catch (Exception ignored) {}
+            }
+
+            return "README_NOT_FOUND";
+
+        } catch (Exception e) {
+            return "README_NOT_FOUND";
         }
-
-        return "README_NOT_FOUND";
-
-    } catch (Exception e) {
-        return "README_NOT_FOUND";
     }
-}
 
     // ===================== FETCH STRUCTURE =====================
 
@@ -184,7 +201,8 @@ public String fetchReadme(String repoUrl) {
                     "Dockerfile"
             };
 
-            String[] branches = {"main", "master"};
+            // ✅ FIX: Added develop branch
+            String[] branches = {"main", "master", "develop"};
 
             StringBuilder result = new StringBuilder();
 

@@ -67,7 +67,14 @@ Please provide a valid repository URL.
 """;
         }
 
-        // ===================== VALIDATIONS (CRITICAL FIX) =====================
+        // ===================== 🔥 GLOBAL ERROR HANDLING (NEW FIX) =====================
+
+        // Stop LLM if any service error occurs
+        if (readme != null && (readme.startsWith("❌") || readme.startsWith("⚠️"))) {
+            return readme;
+        }
+
+        // ===================== EXISTING VALIDATIONS =====================
 
         if ("INVALID_URL".equals(readme)) {
             return """

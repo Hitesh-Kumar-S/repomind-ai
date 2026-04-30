@@ -14,12 +14,48 @@ import java.util.Map;
 @Service
 public class GitHubService implements RepositoryService {
 
-    private static final int MIN_README_LENGTH = 200;
+    private static final int MIN_README_LENGTH = 50;
 
     @Value("${github.token:}")
     private String githubToken;
 
     private final RestTemplate restTemplate = new RestTemplate();
+
+    // ===================== RETRY WRAPPER =====================
+
+    private <T> ResponseEntity<T> exchangeWithRetry(
+            String url, HttpMethod method, HttpEntity<?> entity, Class<T> type) {
+
+        int attempts = 0;
+
+        while (true) {
+            try {
+                return restTemplate.exchange(url, method, entity, type);
+
+            } catch (HttpClientErrorException e) {
+
+                if (e.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS && attempts < 2) {
+                    sleep(1500);
+                    attempts++;
+                    continue;
+                }
+
+                throw e;
+
+            } catch (Exception e) {
+                if (attempts < 2) {
+                    sleep(1000);
+                    attempts++;
+                    continue;
+                }
+                throw e;
+            }
+        }
+    }
+
+    private void sleep(long ms) {
+        try { Thread.sleep(ms); } catch (InterruptedException ignored) {}
+    }
 
     // ===================== CHECK REPO EXISTS =====================
 
@@ -29,7 +65,7 @@ public class GitHubService implements RepositoryService {
 
             HttpEntity<String> entity = new HttpEntity<>(buildHeaders());
 
-            ResponseEntity<String> response = restTemplate.exchange(
+            ResponseEntity<String> response = exchangeWithRetry(
                     url,
                     HttpMethod.GET,
                     entity,
@@ -39,8 +75,7 @@ public class GitHubService implements RepositoryService {
             return response.getStatusCode().is2xxSuccessful();
 
         } catch (HttpClientErrorException e) {
-            // 🔥 Only 404 = invalid repo
-            return e.getStatusCode() != HttpStatus.NOT_FOUND;
+            return false; // FIXED
         }
     }
 
@@ -48,28 +83,30 @@ public class GitHubService implements RepositoryService {
 
     @Override
     public String fetchReadme(String repoUrl) {
+
         try {
             if (repoUrl == null || repoUrl.trim().isEmpty()) {
-                return "INVALID_URL";
+                return "❌ Invalid repository URL.";
             }
 
             repoUrl = normalizeUrl(repoUrl);
 
             if (!repoUrl.startsWith("https://github.com/")) {
-                return "INVALID_URL";
+                return "❌ Only GitHub URLs are supported.";
             }
 
             String[] parts = repoUrl.replace("https://github.com/", "").split("/");
-            if (parts.length < 2) return "INVALID_URL";
+            if (parts.length < 2) return "❌ Invalid repository URL.";
 
             String owner = parts[0];
             String repo = parts[1];
 
             if (!repoExists(owner, repo)) {
-                return "INVALID_URL";
+                return "❌ Repository not found or is private.";
             }
 
-            // 🔥 PRIMARY: /readme endpoint
+            // ================= PRIMARY =================
+
             try {
                 String apiUrl = "https://api.github.com/repos/" + owner + "/" + repo + "/readme";
 
@@ -78,7 +115,7 @@ public class GitHubService implements RepositoryService {
 
                 HttpEntity<String> entity = new HttpEntity<>(headers);
 
-                ResponseEntity<String> response = restTemplate.exchange(
+                ResponseEntity<String> response = exchangeWithRetry(
                         apiUrl,
                         HttpMethod.GET,
                         entity,
@@ -86,36 +123,52 @@ public class GitHubService implements RepositoryService {
                 );
 
                 JSONObject json = new JSONObject(response.getBody());
-                String encodedContent = json.getString("content");
+
+                if (!json.has("content")) {
+                    return "❌ README file not found in this repository.";
+                }
+
+                String encoded = json.getString("content");
 
                 String decoded = new String(
-                        Base64.getDecoder().decode(encodedContent.replaceAll("\\s", ""))
+                        Base64.getDecoder().decode(encoded.replaceAll("\\s", ""))
                 ).trim();
 
                 if (decoded.length() < MIN_README_LENGTH) {
-                    return "WEAK_README";
+                    return "⚠️ README found, but content is too short or insufficient.";
                 }
 
                 return decoded;
 
-            } catch (Exception ignored) {
-                // 🔁 fallback below
+            } catch (HttpClientErrorException e) {
+
+                if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                    // fallback
+                } else if (e.getStatusCode() == HttpStatus.FORBIDDEN) {
+                    return "⚠️ GitHub API rate limit exceeded. Please try again later.";
+                } else if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                    return "❌ GitHub authentication failed. Check API token.";
+                } else {
+                    return "❌ Error fetching README: " + e.getMessage();
+                }
             }
 
-            // 🔥 FALLBACK: manual file fetch
+            // ================= FALLBACK =================
+
             String[] branches = {"main", "master"};
             String[] files = {"README.md", "readme.md", "Readme.md"};
 
             for (String branch : branches) {
                 for (String file : files) {
                     try {
+
                         String url = "https://api.github.com/repos/"
                                 + owner + "/" + repo
                                 + "/contents/" + file + "?ref=" + branch;
 
                         HttpEntity<String> entity = new HttpEntity<>(buildHeaders());
 
-                        ResponseEntity<Map> response = restTemplate.exchange(
+                        ResponseEntity<Map> response = exchangeWithRetry(
                                 url,
                                 HttpMethod.GET,
                                 entity,
@@ -133,16 +186,26 @@ public class GitHubService implements RepositoryService {
                                 Base64.getDecoder().decode(content.replaceAll("\\s", ""))
                         ).trim();
 
+                        if (decoded.length() < MIN_README_LENGTH) {
+                            return "⚠️ README found, but content is too short.";
+                        }
+
                         return decoded;
+
+                    } catch (HttpClientErrorException e) {
+
+                        if (e.getStatusCode() == HttpStatus.FORBIDDEN) {
+                            return "⚠️ GitHub API rate limit exceeded.";
+                        }
 
                     } catch (Exception ignored) {}
                 }
             }
 
-            return "README_NOT_FOUND";
+            return "❌ README not found in this repository.";
 
         } catch (Exception e) {
-            return "README_NOT_FOUND";
+            return "❌ Unexpected error: " + e.getMessage();
         }
     }
 
@@ -150,24 +213,25 @@ public class GitHubService implements RepositoryService {
 
     @Override
     public String fetchRepoStructure(String repoUrl) {
+
         try {
             repoUrl = normalizeUrl(repoUrl);
 
             String[] parts = repoUrl.replace("https://github.com/", "").split("/");
-            if (parts.length < 2) return "INVALID_URL";
+            if (parts.length < 2) return "Invalid URL";
 
             String owner = parts[0];
             String repo = parts[1];
 
             if (!repoExists(owner, repo)) {
-                return "INVALID_URL";
+                return "Repository not found.";
             }
 
             String apiUrl = "https://api.github.com/repos/" + owner + "/" + repo + "/contents";
 
             HttpEntity<String> entity = new HttpEntity<>(buildHeaders());
 
-            ResponseEntity<List> response = restTemplate.exchange(
+            ResponseEntity<List> response = exchangeWithRetry(
                     apiUrl,
                     HttpMethod.GET,
                     entity,
@@ -175,7 +239,7 @@ public class GitHubService implements RepositoryService {
             );
 
             List<Map<String, Object>> files = response.getBody();
-            if (files == null) return "No repository structure available.";
+            if (files == null) return "No structure available.";
 
             StringBuilder structure = new StringBuilder();
 
@@ -190,24 +254,25 @@ public class GitHubService implements RepositoryService {
             return structure.toString();
 
         } catch (Exception e) {
-            return "Could not fetch repository structure.";
+            return "Could not fetch structure.";
         }
     }
 
     // ===================== FETCH KEY FILES =====================
 
     public String fetchKeyFiles(String repoUrl) {
+
         try {
             repoUrl = normalizeUrl(repoUrl);
 
             String[] parts = repoUrl.replace("https://github.com/", "").split("/");
-            if (parts.length < 2) return "No key files available.";
+            if (parts.length < 2) return "No key files.";
 
             String owner = parts[0];
             String repo = parts[1];
 
             if (!repoExists(owner, repo)) {
-                return "No key files available.";
+                return "No key files.";
             }
 
             String apiBase = "https://api.github.com/repos/" + owner + "/" + repo;
@@ -225,9 +290,10 @@ public class GitHubService implements RepositoryService {
 
             for (String fileName : importantFiles) {
                 try {
+
                     String url = apiBase + "/contents/" + fileName;
 
-                    ResponseEntity<Map> response = restTemplate.exchange(
+                    ResponseEntity<Map> response = exchangeWithRetry(
                             url,
                             HttpMethod.GET,
                             entity,
@@ -264,18 +330,14 @@ public class GitHubService implements RepositoryService {
 
     private String normalizeUrl(String repoUrl) {
         repoUrl = repoUrl.trim();
-        if (repoUrl.endsWith("/")) {
-            repoUrl = repoUrl.substring(0, repoUrl.length() - 1);
-        }
-        if (repoUrl.endsWith(".git")) {
-            repoUrl = repoUrl.substring(0, repoUrl.length() - 4);
-        }
+        if (repoUrl.endsWith("/")) repoUrl = repoUrl.substring(0, repoUrl.length() - 1);
+        if (repoUrl.endsWith(".git")) repoUrl = repoUrl.substring(0, repoUrl.length() - 4);
         return repoUrl;
     }
 
     private HttpHeaders buildHeaders() {
         HttpHeaders headers = new HttpHeaders();
-        headers.set("User-Agent", "Project-Analyzer-App");
+        headers.set("User-Agent", "RepoMind-AI");
 
         if (githubToken != null && !githubToken.isBlank()) {
             headers.setBearerAuth(githubToken);

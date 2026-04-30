@@ -15,32 +15,62 @@ public class ChatService {
     @Autowired
     private OpenRouterLLMService openRouterService;
 
+    // 🔥 LIMIT CONTEXT SIZE (CRITICAL FIX)
+    private static final int MAX_CONTEXT_LENGTH = 3000;
+
+    private String trimContext(String text) {
+        if (text == null) return "";
+        return text.length() > MAX_CONTEXT_LENGTH
+                ? text.substring(0, MAX_CONTEXT_LENGTH)
+                : text;
+    }
+
+    // 🔥 CLEAN OUTPUT (PREVENT GARBAGE TEXT)
+    private String cleanResponse(String response) {
+        if (response == null) return "";
+
+        // Prevent extremely long / corrupted outputs
+        if (response.length() > 5000) {
+            response = response.substring(0, 5000);
+        }
+
+        return response.trim();
+    }
+
     public String chat(String question, boolean strictMode) {
 
         if (!contextService.hasContext()) {
             return "❌ Please analyze a repository first.";
         }
 
-        String context = contextService.buildContext();
+        // 🔥 FIX: Trim context before sending to LLM
+        String context = trimContext(contextService.buildContext());
 
         String prompt = strictMode
                 ? buildStrictPrompt(context, question)
                 : buildSmartPrompt(context, question);
 
+        // 🔒 STRICT MODE → Groq
         if (strictMode) {
-    return groqService.generateResponse(prompt);
-} else {
-    try {
-        return openRouterService.generateResponse(prompt);
-    } catch (Exception e) {
-        // 🔥 fallback to Groq
-        try {
-            return groqService.generateResponse(prompt);
-        } catch (Exception ex) {
-            return "⚠️ I'm experiencing high traffic. Please try again in a few moments.";
+            try {
+                return cleanResponse(groqService.generateResponse(prompt));
+            } catch (Exception e) {
+                return "⚠️ Unable to process request. Please try again.";
+            }
         }
-    }
-}
+
+        // 🧠 SMART MODE → OpenRouter → fallback Groq
+        try {
+            return cleanResponse(openRouterService.generateResponse(prompt));
+        } catch (Exception e) {
+
+            // 🔥 fallback to Groq
+            try {
+                return cleanResponse(groqService.generateResponse(prompt));
+            } catch (Exception ex) {
+                return "⚠️ I'm experiencing high traffic. Please try again in a few moments.";
+            }
+        }
     }
 
     // 🔒 STRICT MODE
@@ -63,7 +93,7 @@ Question:
 """.formatted(context, question);
     }
 
-    // 🧠 SMART MODE (IMPROVED 🔥)
+    // 🧠 SMART MODE
     private String buildSmartPrompt(String context, String question) {
         return """
 You are an expert software engineer and AI assistant.

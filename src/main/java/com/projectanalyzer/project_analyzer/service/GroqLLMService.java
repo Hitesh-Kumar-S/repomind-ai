@@ -5,6 +5,7 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
@@ -13,7 +14,7 @@ public class GroqLLMService implements LLMService {
     @Value("${groq.api.key}")
     private String apiKey;
 
-    private static final int MAX_README_LENGTH = 6000;
+    private static final int MAX_README_LENGTH = 4000; // 🔥 Reduced for stability
 
     private static final String GROQ_API_URL =
             "https://api.groq.com/openai/v1/chat/completions";
@@ -21,42 +22,75 @@ public class GroqLLMService implements LLMService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     // 🔥 =========================
-    // 🔹 GENERIC LLM CALL (NEW)
+    // 🔹 GENERIC LLM CALL (UPDATED)
     // 🔥 =========================
     public String callLLM(String prompt) {
 
-        try {
-            JSONObject message = new JSONObject();
-            message.put("role", "user");
-            message.put("content", prompt);
+        int retries = 0;
 
-            JSONArray messages = new JSONArray();
-            messages.put(message);
+        while (retries < 3) {
+            try {
+                JSONObject message = new JSONObject();
+                message.put("role", "user");
+                message.put("content", prompt);
 
-            JSONObject body = new JSONObject();
-            body.put("model", "llama-3.1-8b-instant");
-            body.put("messages", messages);
-            body.put("temperature", 0.2);
+                JSONArray messages = new JSONArray();
+                messages.put(message);
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(apiKey);
-            headers.setContentType(MediaType.APPLICATION_JSON);
+                JSONObject body = new JSONObject();
+                body.put("model", "llama-3.1-8b-instant");
+                body.put("messages", messages);
+                body.put("temperature", 0.2);
+                body.put("max_tokens", 800); // 🔥 prevents token overflow
 
-            HttpEntity<String> entity =
-                    new HttpEntity<>(body.toString(), headers);
+                HttpHeaders headers = new HttpHeaders();
+                headers.setBearerAuth(apiKey);
+                headers.setContentType(MediaType.APPLICATION_JSON);
 
-            ResponseEntity<String> response =
-                    restTemplate.postForEntity(GROQ_API_URL, entity, String.class);
+                HttpEntity<String> entity =
+                        new HttpEntity<>(body.toString(), headers);
 
-            return extractContent(response.getBody());
+                ResponseEntity<String> response =
+                        restTemplate.postForEntity(GROQ_API_URL, entity, String.class);
 
-        } catch (Exception e) {
-            return "❌ Groq API Error: " + e.getMessage();
+                return extractContent(response.getBody());
+
+            } catch (HttpClientErrorException e) {
+
+                int status = e.getStatusCode().value();
+
+                // 🔥 RATE LIMIT HANDLING
+                if (status == 429) {
+                    try {
+                        Thread.sleep(2000); // wait 2 sec
+                    } catch (InterruptedException ignored) {}
+                    retries++;
+                    continue;
+                }
+
+                // 🔥 AUTH ERROR
+                if (status == 401) {
+                    return "❌ Invalid Groq API Key. Please check configuration.";
+                }
+
+                return "❌ Groq API Error: " + e.getMessage();
+
+            } catch (Exception e) {
+
+                // 🔥 Retry on network errors
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ignored) {}
+
+                retries++;
+            }
         }
+
+        return "⚠️ Groq service is busy. Please try again in a few seconds.";
     }
 
     // 🔥 =========================
-    // 🔹 PROJECT ANALYSIS (EXISTING)
+    // 🔹 PROJECT ANALYSIS (UNCHANGED PROMPT)
     // 🔥 =========================
     public String analyzeProject(String readme) {
 
@@ -74,10 +108,10 @@ The README.md provided is missing or insufficient.
 """;
         }
 
+        // 🔥 Reduced size to avoid rate limit
         if (readme.length() > MAX_README_LENGTH) {
             readme = readme.substring(0, MAX_README_LENGTH);
         }
-
 
         String prompt = """
 You are an experienced software engineer and a friendly technical interviewer.
@@ -118,15 +152,14 @@ Use the following structure:
 - Emphasize **key technical decisions** in bold.
 
 ### **6. README Quality Score**
--Evaluate the README based ONLY on available content.
--Make sure that the heading are bolded. 
--Scoring Criteria (0–10 each):
+Evaluate the README based ONLY on available content.
 
--Clarity
--Completeness
--Structure
--Setup Instructions
--Examples / Usage
+Scoring Criteria (0–10 each):
+- Clarity
+- Completeness
+- Structure
+- Setup Instructions
+- Examples / Usage
 
 Format (STRICT):
 
@@ -138,32 +171,15 @@ Format (STRICT):
 
 **Final Score**: (X1 + X2 + X3 + X4 + X5)/10
 
--Keep the evaluation fair, realistic, and encouraging.
--If something is missing, reflect it in the score gently.
-
 ### **7. Missing or Weak Documentation Sections**
--Identify important sections that are missing or insufficient, such as:
--Setup Instructions
--Usage Examples
--Architecture
--Contribution Guidelines
--License
--Present it in a helpful way:
--"The README could be improved by adding: ..."
+- Identify missing sections:
+Setup Instructions, Usage, Architecture, Contribution, License
 
-### **8. Possible Improvements or Extensions**
-- Suggest **realistic and constructive improvements** based on the current scope.
-- Avoid speculative or overly advanced features if the README does not suggest them.
+### **8. Possible Improvements**
+- Suggest realistic improvements
 
 ### **Positive Closing Note**
-- End with a **supportive and encouraging statement** about the project.
-- Acknowledge the effort and potential for future growth.
-
-Formatting Guidelines:
-- Use **bold text** for important terms, technologies, and key takeaways.
-- Use clear section headings.
-- Keep the tone **friendly, neutral, and professional**.
-- Avoid harsh or judgmental language.
+- Encourage the developer
 
 Project README:
 """ + readme;
@@ -172,23 +188,34 @@ Project README:
     }
 
     // 🔥 =========================
-    // 🔹 RESPONSE PARSER (NEW)
+    // 🔹 SAFE RESPONSE PARSER (UPDATED)
     // 🔥 =========================
     private String extractContent(String responseBody) {
-        JSONObject json = new JSONObject(responseBody);
 
-        return json
-                .getJSONArray("choices")
-                .getJSONObject(0)
-                .getJSONObject("message")
-                .getString("content");
+        try {
+            JSONObject json = new JSONObject(responseBody);
+
+            // 🔥 Handle error response safely
+            if (json.has("error")) {
+                return "❌ Groq Error: " + json.getJSONObject("error").getString("message");
+            }
+
+            return json
+                    .getJSONArray("choices")
+                    .getJSONObject(0)
+                    .getJSONObject("message")
+                    .getString("content");
+
+        } catch (Exception e) {
+            return "❌ Failed to parse Groq response.";
+        }
     }
 
     // 🔥 =========================
-    // 🔹 CHAT RESPONSE (NEW FIX)
+    // 🔹 CHAT RESPONSE
     // 🔥 =========================
     public String chatResponse(String prompt) {
-        return callLLM(prompt); // direct LLM call (no analysis format)
+        return callLLM(prompt);
     }
 
     @Override

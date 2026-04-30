@@ -22,7 +22,14 @@ public class BitbucketService implements RepositoryService {
         }
 
         String clean = repoUrl.replace("https://bitbucket.org/", "");
-        return clean.split("/");
+        String[] parts = clean.split("/");
+
+        // ✅ Always take only workspace + repo
+        if (parts.length >= 2) {
+            return new String[]{parts[0], parts[1]};
+        }
+
+        return parts;
     }
 
     // ===================== CHECK REPO EXISTS =====================
@@ -45,32 +52,40 @@ public class BitbucketService implements RepositoryService {
     @Override
     public String fetchReadme(String repoUrl) {
         try {
+
+            // ❌ Block invalid /src URLs
+            if (repoUrl != null && repoUrl.contains("/src/")) {
+                return "❌ Invalid Bitbucket URL. Remove '/src/branch' from the link.\nExample: https://bitbucket.org/workspace/repository";
+            }
+
             if (repoUrl == null || !repoUrl.startsWith("https://bitbucket.org/")) {
-                return "INVALID_URL";
+                return "❌ Invalid Bitbucket URL.\nExpected format:\nhttps://bitbucket.org/workspace/repository";
             }
 
             String[] parts = extractParts(repoUrl);
-            if (parts.length < 2) return "INVALID_URL";
+            if (parts.length < 2) {
+                return "❌ Invalid Bitbucket URL.\nExpected format:\nhttps://bitbucket.org/workspace/repository";
+            }
 
             String workspace = parts[0];
             String repo = parts[1];
 
-            // 🔥 Check repo exists first
             if (!repoExists(workspace, repo)) {
-                return "INVALID_URL";
+                return "❌ Repository not found or is private.";
             }
 
-            String[] branches = {"main", "master"};
+            // ✅ Added develop branch
+            String[] branches = {"main", "master", "develop"};
 
             for (String branch : branches) {
                 String readme = fetchFromBranch(workspace, repo, branch);
                 if (readme != null) return readme;
             }
 
-            return "README_NOT_FOUND";
+            return "❌ README not found in this repository.";
 
         } catch (Exception e) {
-            return "README_NOT_FOUND";
+            return "❌ README not found in this repository.";
         }
     }
 
@@ -79,18 +94,23 @@ public class BitbucketService implements RepositoryService {
     @Override
     public String fetchRepoStructure(String repoUrl) {
         try {
+
+            if (repoUrl != null && repoUrl.contains("/src/")) {
+                return "❌ Invalid Bitbucket URL. Remove '/src/branch' from the link.";
+            }
+
             if (repoUrl == null || !repoUrl.startsWith("https://bitbucket.org/")) {
-                return "INVALID_URL";
+                return "❌ Invalid Bitbucket URL.";
             }
 
             String[] parts = extractParts(repoUrl);
-            if (parts.length < 2) return "INVALID_URL";
+            if (parts.length < 2) return "❌ Invalid Bitbucket URL.";
 
             String workspace = parts[0];
             String repo = parts[1];
 
             if (!repoExists(workspace, repo)) {
-                return "INVALID_URL";
+                return "❌ Repository not found.";
             }
 
             String baseUrl = "https://api.bitbucket.org/2.0/repositories/"
@@ -100,6 +120,9 @@ public class BitbucketService implements RepositoryService {
             if (structure != null) return structure;
 
             structure = fetchStructureFromBranch(baseUrl, "master");
+            if (structure != null) return structure;
+
+            structure = fetchStructureFromBranch(baseUrl, "develop");
             if (structure != null) return structure;
 
             return "Could not fetch repository structure.";
@@ -146,6 +169,11 @@ public class BitbucketService implements RepositoryService {
 
     public String fetchKeyFiles(String repoUrl) {
         try {
+
+            if (repoUrl != null && repoUrl.contains("/src/")) {
+                return "❌ Invalid Bitbucket URL.";
+            }
+
             String[] parts = extractParts(repoUrl);
             if (parts.length < 2) return "No key files available.";
 
@@ -163,7 +191,7 @@ public class BitbucketService implements RepositoryService {
                     "Dockerfile"
             };
 
-            String[] branches = {"main", "master"};
+            String[] branches = {"main", "master", "develop"};
 
             StringBuilder result = new StringBuilder();
 
@@ -178,7 +206,12 @@ public class BitbucketService implements RepositoryService {
 
                         String content = restTemplate.getForObject(url, String.class);
 
-                        if (content != null && !content.isEmpty()) {
+                        if (content != null && !content.trim().isEmpty()) {
+
+                            if (content.length() < 50) {
+                                return "⚠️ README exists but content is too short.";
+                            }
+
                             content = content.substring(0, Math.min(content.length(), 1500));
 
                             result.append("=== ").append(file).append(" ===\n");
@@ -218,7 +251,11 @@ public class BitbucketService implements RepositoryService {
                             + branch + "/"
                             + file;
 
-                    return restTemplate.getForObject(url, String.class);
+                    String content = restTemplate.getForObject(url, String.class);
+
+                    if (content != null && !content.trim().isEmpty()) {
+                        return content;
+                    }
 
                 } catch (Exception ignored) {}
             }
