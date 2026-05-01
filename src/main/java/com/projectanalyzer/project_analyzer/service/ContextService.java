@@ -29,8 +29,15 @@ public class ContextService {
         return repoStructure;
     }
 
+    // ===================== KEY FILES =====================
+
     public void setKeyFiles(String keyFiles) {
         this.keyFiles = keyFiles;
+    }
+
+    // 🔥 FIX: Missing getter (this caused your error)
+    public String getKeyFiles() {
+        return keyFiles;
     }
 
     // ===================== CONTEXT CHECK =====================
@@ -42,17 +49,18 @@ public class ContextService {
     public void clear() {
         this.currentReadme = null;
         this.repoStructure = null;
+        this.keyFiles = null; // 🔥 FIX: reset properly
     }
 
     // ===================== BUILD CONTEXT =====================
 
     public String buildContext() {
 
-    String readme = currentReadme != null ? currentReadme : "No README available";
-    String structure = repoStructure != null ? repoStructure : "No structure available";
-    String files = keyFiles != null ? keyFiles : "No key files available";
+        String readme = currentReadme != null ? currentReadme : "No README available";
+        String structure = repoStructure != null ? repoStructure : "No structure available";
+        String files = keyFiles != null ? keyFiles : "No key files available";
 
-    return """
+        return """
 PROJECT README:
 %s
 
@@ -62,5 +70,5 @@ PROJECT STRUCTURE:
 IMPORTANT FILES:
 %s
 """.formatted(readme, structure, files);
-}
+    }
 }

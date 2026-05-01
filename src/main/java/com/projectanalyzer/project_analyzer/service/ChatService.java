@@ -15,21 +15,39 @@ public class ChatService {
     @Autowired
     private OpenRouterLLMService openRouterService;
 
-    // 🔥 LIMIT CONTEXT SIZE (CRITICAL FIX)
-    private static final int MAX_CONTEXT_LENGTH = 3000;
+    // 🔥 PRIORITY LIMITS
+    private static final int README_LIMIT = 2500;
+    private static final int STRUCTURE_LIMIT = 300;
+    private static final int KEYFILES_LIMIT = 200;
 
-    private String trimContext(String text) {
+    // 🔧 Trim helper
+    private String trim(String text, int limit) {
         if (text == null) return "";
-        return text.length() > MAX_CONTEXT_LENGTH
-                ? text.substring(0, MAX_CONTEXT_LENGTH)
-                : text;
+        return text.length() > limit ? text.substring(0, limit) : text;
     }
 
-    // 🔥 CLEAN OUTPUT (PREVENT GARBAGE TEXT)
+    // 🔥 Build SMART context (NEW)
+    private String buildSmartContext() {
+        String readme = trim(contextService.getReadme(), README_LIMIT);
+        String structure = trim(contextService.getRepoStructure(), STRUCTURE_LIMIT);
+        String keyFiles = trim(contextService.getKeyFiles(), KEYFILES_LIMIT);
+
+        return """
+README:
+%s
+
+STRUCTURE:
+%s
+
+KEY FILES:
+%s
+""".formatted(readme, structure, keyFiles);
+    }
+
+    // 🔥 Clean response
     private String cleanResponse(String response) {
         if (response == null) return "";
 
-        // Prevent extremely long / corrupted outputs
         if (response.length() > 5000) {
             response = response.substring(0, 5000);
         }
@@ -43,8 +61,8 @@ public class ChatService {
             return "❌ Please analyze a repository first.";
         }
 
-        // 🔥 FIX: Trim context before sending to LLM
-        String context = trimContext(contextService.buildContext());
+        // 🔥 Use smart context instead of raw buildContext()
+        String context = buildSmartContext();
 
         String prompt = strictMode
                 ? buildStrictPrompt(context, question)
@@ -63,8 +81,6 @@ public class ChatService {
         try {
             return cleanResponse(openRouterService.generateResponse(prompt));
         } catch (Exception e) {
-
-            // 🔥 fallback to Groq
             try {
                 return cleanResponse(groqService.generateResponse(prompt));
             } catch (Exception ex) {
@@ -73,7 +89,7 @@ public class ChatService {
         }
     }
 
-    // 🔒 STRICT MODE
+    // 🔒 STRICT MODE PROMPT (UNCHANGED)
     private String buildStrictPrompt(String context, String question) {
         return """
 You are an AI assistant.
@@ -93,7 +109,7 @@ Question:
 """.formatted(context, question);
     }
 
-    // 🧠 SMART MODE
+    // 🧠 SMART MODE PROMPT (UNCHANGED)
     private String buildSmartPrompt(String context, String question) {
         return """
 You are an expert software engineer and AI assistant.
