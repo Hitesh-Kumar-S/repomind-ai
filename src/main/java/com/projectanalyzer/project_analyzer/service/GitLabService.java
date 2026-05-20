@@ -195,11 +195,18 @@ public class GitLabService implements RepositoryService {
             }
 
             String[] files = {
-                    "pom.xml",
-                    "package.json",
-                    "application.properties",
-                    "Dockerfile"
-            };
+        "pom.xml",
+        "package.json",
+        "package-lock.json",
+        "requirements.txt",
+        "build.gradle",
+        "settings.gradle",
+        "Dockerfile",
+        "docker-compose.yml",
+        "application.properties",
+        "application.yml",
+        "README.md"
+};
 
             // ✅ FIX: Added develop branch
             String[] branches = {"main", "master", "develop"};

@@ -278,11 +278,18 @@ public class GitHubService implements RepositoryService {
             String apiBase = "https://api.github.com/repos/" + owner + "/" + repo;
 
             String[] importantFiles = {
-                    "pom.xml",
-                    "package.json",
-                    "application.properties",
-                    "Dockerfile"
-            };
+        "pom.xml",
+        "package.json",
+        "package-lock.json",
+        "requirements.txt",
+        "build.gradle",
+        "settings.gradle",
+        "Dockerfile",
+        "docker-compose.yml",
+        "application.properties",
+        "application.yml",
+        "README.md"
+};
 
             HttpEntity<String> entity = new HttpEntity<>(buildHeaders());
 

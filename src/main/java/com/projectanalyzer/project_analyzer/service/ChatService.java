@@ -16,9 +16,9 @@ public class ChatService {
     private OpenRouterLLMService openRouterService;
 
     // 🔥 PRIORITY LIMITS
-    private static final int README_LIMIT = 2500;
-    private static final int STRUCTURE_LIMIT = 300;
-    private static final int KEYFILES_LIMIT = 200;
+    private static final int README_LIMIT = 12000;
+    private static final int STRUCTURE_LIMIT = 3000;
+    private static final int KEYFILES_LIMIT = 3000;
 
     // 🔧 Trim helper
     private String trim(String text, int limit) {
@@ -91,57 +91,74 @@ KEY FILES:
 
     // 🔒 STRICT MODE PROMPT (UNCHANGED)
     private String buildStrictPrompt(String context, String question) {
-        return """
-You are an AI assistant.
+    return """
+You are an AI assistant helping users understand a software project.
 
-Answer ONLY using the project README content below.
-Do NOT use any external knowledge.
-Do NOT guess or assume anything.
+Your PRIMARY source is the provided project context (README, repository structure, and key files).
 
-If the answer is not present in the README, respond exactly with:
-"This is not mentioned in the project README."
+Rules:
+- Prioritize information explicitly available in the provided project context.
+- If the project mentions a technology, framework, library, tool, API, or concept, you MAY use your general knowledge to explain what it commonly does and why it is generally used.
+- Do NOT invent project-specific facts, decisions, architecture details, or implementation details that are not supported by the context.
+- Never assume a technology or framework is absent simply because it is not clearly visible in the provided context.
+- If something is not explicitly mentioned, clearly say:
+  "The project context does not explicitly mention this."
+- Be accurate, honest, concise, and helpful.
+- Keep answers professional and interview-ready.
 
-README:
+Examples:
+- If the project mentions YOLOv8, you may explain that YOLOv8 is commonly used for real-time object detection.
+- But do NOT assume why the developer specifically chose YOLOv8 unless the context explicitly mentions it.
+- If Marked.js appears in the context, you may explain that it is commonly used for rendering Markdown into HTML.
+
+Project Context:
 %s
 
 Question:
 %s
 """.formatted(context, question);
-    }
+}
 
     // 🧠 SMART MODE PROMPT (UNCHANGED)
     private String buildSmartPrompt(String context, String question) {
-        return """
+    return """
 You are an expert software engineer and AI assistant.
 
-You are helping a user understand a project and answer technical questions.
+You are helping a user understand a software project and answer technical questions.
 
-You are given project context (README + structure), but you are NOT limited to it.
+You are given project context (README, repository structure, and key files), but you are NOT limited to it.
 
 You can:
-- Answer questions about the project
-- Explain technologies
+- Explain project concepts
+- Explain technologies and frameworks
 - Suggest improvements
-- Compare tech stacks
+- Compare tools and architectures
 - Answer general programming questions
+- Provide interview-style explanations
 
 IMPORTANT:
-- Use project context when relevant
-- If context is missing, use your own knowledge
-- Do NOT say "according to the README"
-- Do NOT restrict yourself only to the context
-- Give clear, confident, and direct answers
+- Use the provided project context whenever relevant.
+- If the context is incomplete, use your own technical knowledge to provide helpful explanations.
+- Do NOT invent unsupported project-specific implementation details.
+- Avoid saying phrases like:
+  "According to the README"
+  or
+  "The context does not mention..."
+  unless absolutely necessary.
+- Give direct, confident, and natural explanations.
 
 Tone:
 - Professional
+- Clear
 - Concise
+- Helpful
 - Interview-ready
 
-Context:
+Project Context:
 %s
 
 Question:
 %s
 """.formatted(context, question);
-    }
+}
 }

@@ -185,11 +185,18 @@ public class BitbucketService implements RepositoryService {
             }
 
             String[] files = {
-                    "pom.xml",
-                    "package.json",
-                    "application.properties",
-                    "Dockerfile"
-            };
+        "pom.xml",
+        "package.json",
+        "package-lock.json",
+        "requirements.txt",
+        "build.gradle",
+        "settings.gradle",
+        "Dockerfile",
+        "docker-compose.yml",
+        "application.properties",
+        "application.yml",
+        "README.md"
+};
 
             String[] branches = {"main", "master", "develop"};
 

@@ -47,31 +47,21 @@ body {
     display: flex;
     gap: 20px;
     padding: 20px;
+    align-items: flex-start;
 }
 
 /* PANELS */
 .panel {
     background: var(--card);
     border-radius: 22px;
-    padding: 14px 20px 20px;
-    display: flex;
-    flex-direction: column;
-    height: 90vh;
-    overflow: hidden;
-    box-shadow: 0 4px 24px rgba(91,108,255,0.10);
-    border: 1px solid rgba(91,108,255,0.12);
-}
-
-.panel {
-    background: var(--card);
-    border-radius: 22px;
     padding: 6px 20px 20px;
     display: flex;
     flex-direction: column;
-    height: 90vh;
+    height: calc(100vh - 40px);
     overflow: hidden;
     box-shadow: 0 4px 24px rgba(91,108,255,0.10);
     border: 1px solid rgba(91,108,255,0.12);
+    box-sizing: border-box;
 }
 
 body.dark .panel {
@@ -80,6 +70,11 @@ body.dark .panel {
 
 .left-panel { width: 60%; }
 .right-panel { width: 40%; padding: 0; }
+
+.left-panel,
+.right-panel {
+    align-self: stretch;
+}
 
 /* TOP */
 .top {
@@ -680,7 +675,7 @@ body.dark .chat-input-area {
     <button id="analyzeBtn" onclick="analyzeProject()">Analyze</button>
 </div>
 
-<div id="spinner">⏳ Analyzing...</div>
+<div id="spinner">🔍 Reading repository...</div>
 
 <div class="copy-row" id="copyRow">
     <button class="copy-btn-analysis" id="copyBtn" onclick="copyResult()">📋 Copy</button>
@@ -706,8 +701,13 @@ body.dark .chat-input-area {
         <div class="chat-info-banner">
             <p>👋 How to use the modes:</p>
             <ul>
-                <li><span class="hl">Strict Mode</span> → Answers strictly from the <span class="hl">README</span>. Best for factual, project-specific details.</li>
-                <li><span class="hl">Smart Mode</span> → Uses AI beyond README. Best for explanations, comparisons & improvements.</li>
+                <li>
+    <span class="hl">Accurate Mode</span> → Uses the project <span class="hl">README</span> as the primary source and provides reliable, project-grounded answers. Best for factual details and interview preparation.
+</li>
+
+<li>
+    <span class="hl">Detailed Mode</span> → Uses AI knowledge beyond the README for deeper explanations, comparisons, architecture understanding, and improvement suggestions.
+</li>
             </ul>
             <div class="chat-info-note">
                 ⚠️ AI-generated responses. Please verify important information.
@@ -718,8 +718,8 @@ body.dark .chat-input-area {
         <div class="mode-toggle-wrapper">
             <div class="mode-toggle" id="modeToggle" onclick="toggleMode()">
                 <div class="mode-slider"></div>
-                <span class="mode-label" id="labelStrict">🎯 Strict</span>
-                <span class="mode-label" id="labelSmart">🧠 Smart</span>
+                <span class="mode-label" id="labelStrict">🎯 Accurate</span>
+                <span class="mode-label" id="labelSmart">🧠 Detailed</span>
             </div>
         </div>
 
@@ -765,6 +765,20 @@ function analyzeProject() {
     copyRow.style.display = "none";
     spinner.style.display = "block";
 
+    const loadingMessages = [
+    "🔍 Reading repository structure...",
+    "📄 Analyzing README...",
+    "🧠 Understanding technologies...",
+    "⚡ Generating AI insights..."
+];
+
+let msgIndex = 0;
+
+const loadingInterval = setInterval(() => {
+    spinner.textContent = loadingMessages[msgIndex % loadingMessages.length];
+    msgIndex++;
+}, 2000);
+
     fetch("/analyze", {
         method: "POST",
         headers: { "Content-Type": "text/plain" },
@@ -776,6 +790,7 @@ function analyzeProject() {
     })
     .then(text => {
         result.innerHTML = marked.parse(text);
+        clearInterval(loadingInterval);
         spinner.style.display = "none";
         copyRow.style.display = "flex";
         analyzeBtn.disabled = false;
@@ -783,6 +798,7 @@ function analyzeProject() {
     })
     .catch(err => {
         result.innerHTML = "❌ Error: " + err.message;
+        clearInterval(loadingInterval);
         spinner.style.display = "none";
         copyRow.style.display = "none";
         analyzeBtn.disabled = false;

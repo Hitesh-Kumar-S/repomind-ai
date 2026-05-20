@@ -41,7 +41,7 @@ public class GroqLLMService implements LLMService {
                 body.put("model", "llama-3.1-8b-instant");
                 body.put("messages", messages);
                 body.put("temperature", 0.2);
-                body.put("max_tokens", 800); // 🔥 prevents token overflow
+                body.put("max_tokens", 1000); // 🔥 prevents token overflow
 
                 HttpHeaders headers = new HttpHeaders();
                 headers.setBearerAuth(apiKey);
@@ -77,6 +77,8 @@ public class GroqLLMService implements LLMService {
 
             } catch (Exception e) {
 
+                // 🔥 Log error for debugging
+                System.out.println("Groq Error: " + e.getMessage());
                 // 🔥 Retry on network errors
                 try {
                     Thread.sleep(1000);
@@ -169,7 +171,7 @@ Format (STRICT):
 - **Setup Instructions**: X4/10  
 - **Examples/Usage**: X5/10  
 
-**Final Score**: (X1 + X2 + X3 + X4 + X5)/10
+**Final Score**: ((X1 + X2 + X3 + X4 + X5) / 5)/10
 
 ### **7. Missing or Weak Documentation Sections**
 - Identify missing sections:
