@@ -77,15 +77,26 @@ public class GroqLLMService implements LLMService {
 
             } catch (Exception e) {
 
-                // 🔥 Log error for debugging
-                System.out.println("Groq Error: " + e.getMessage());
-                // 🔥 Retry on network errors
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException ignored) {}
+    System.out.println("Groq Error: " + e.getMessage());
 
-                retries++;
-            }
+    String error = e.getMessage().toLowerCase();
+
+    // 🔥 Internet / connection issues
+    if (error.contains("connection")
+            || error.contains("timeout")
+            || error.contains("host")
+            || error.contains("network")) {
+
+        return "❌ Unable to connect to AI service. Please check your internet connection.";
+    }
+
+    // 🔥 Retry on temporary failures
+    try {
+        Thread.sleep(1000);
+    } catch (InterruptedException ignored) {}
+
+    retries++;
+}
         }
 
         return "⚠️ Groq service is busy. Please try again in a few seconds.";
