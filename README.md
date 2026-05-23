@@ -1,304 +1,361 @@
-# 🚀 Project Analyzer
+# 🚀 RepoMind AI
 
-**Project Analyzer** is a **Spring Boot–based AI application** that analyzes repository `README.md` files and generates **structured, interview-friendly project insights**.
+RepoMind AI is a **Spring Boot–based AI application** that analyzes repository `README.md` files and generates **structured, interview-friendly project insights**.
 
-It helps **students and developers** quickly understand, revise, and confidently explain projects without diving deep into the entire codebase.
+It helps students and developers quickly:
 
----
-
-## 🎯 Motivation
-
-Students and developers often build projects for:
-
-- Learning  
-- Coursework  
-- Resume building  
-- Professional growth  
-
-Over time, remembering:
-
-- Design decisions  
-- Architecture  
-- Features  
-
-becomes difficult — especially before interviews.
-
-Manually revisiting code is:
-
-- ⏱️ Time-consuming  
-- 😓 Inefficient  
-
-### ✅ Solution
-
-This project solves that by:
-
-- Using `README.md` as the **single source of truth**  
-- Generating **structured explanations using AI**  
-- Ensuring **accurate, non-hallucinated output**  
+* understand unfamiliar repositories
+* revise projects before interviews
+* explain architecture and tech stack confidently
+* interact with projects using an AI-powered chatbot
 
 ---
 
-## 🧠 How It Works
+# ✨ Features
 
+## 🔍 Intelligent README Analysis
 
-User Input (Repo URL)
+* README-based project understanding
+* Structured AI-generated explanations
+* No unsupported assumptions
+* Honest handling of missing information
+
+## 🌐 Multi-Platform Repository Support
+
+Supports:
+
+* ✅ GitHub
+* ✅ GitLab
+* ✅ Bitbucket
+
+## 🤖 Context-Aware AI Chatbot
+
+* Ask follow-up questions about analyzed repositories
+* Context reuse from README and project structure
+* Strict anti-hallucination handling
+* Smart Mode + Accurate Mode
+
+## ⚠️ Smart Validation
+
+* Invalid repository URL detection
+* Missing README detection
+* Weak documentation detection
+* Branch fallback handling (`main`, `master`, `develop`)
+
+## 📊 Structured Analysis Output
+
+Generates:
+
+* Project Overview
+* Key Features
+* Tech Stack
+* Architecture / Design Approach
+* Interview Explanation
+* README Quality Score
+* Missing Documentation Sections
+* Suggested Features & Enhancements
+
+## 🎨 User Experience
+
+* Markdown rendering
+* Dark mode 🌙
+* Copy-to-clipboard 📋
+* Loading indicators ⏳
+* Responsive UI
+* Interactive chatbot
+
+---
+
+# 🧠 Motivation
+
+Students and developers often forget:
+
+* architecture decisions
+* implementation details
+* project features
+* tech stack reasoning
+
+especially before:
+
+* interviews
+* viva sessions
+* project demonstrations
+
+Manually revisiting the codebase is time-consuming.
+
+RepoMind AI solves this by transforming repository documentation into:
+
+* concise explanations
+* interview-ready summaries
+* AI-assisted project understanding
+
+---
+
+# 🛠️ Tech Stack
+
+## Backend
+
+* **Java** → Core programming language
+* **Spring Boot** → Backend framework for REST APIs
+* **REST APIs** → Communication layer
+* **Maven** → Dependency and build management
+
+## Frontend
+
+* **HTML** → Structure
+* **CSS** → Styling
+* **JavaScript** → Interactivity
+* **Marked.js** → Markdown rendering
+
+## AI & Integrations
+
+* **Groq API** → LLM inference platform
+* **LLaMA 3.1 (8B)** → AI model for analysis
+* **GitHub REST API** → Fetch repository data
+* **GitLab API** → Fetch repository data
+* **Bitbucket API** → Fetch repository data
+
+---
+
+# 🏗️ Architecture
+
+## 🔹 Workflow
+
+Repository URL
 ↓
-Controller
+Platform Detection
 ↓
-Repository Service (GitHub / GitLab / Bitbucket)
+GitHub / GitLab / Bitbucket Service
 ↓
-Fetch README.md
-↓
-Context Storage
-↓
-LLM (LLaMA 3.1 via Groq)
-↓
-Structured Analysis / Chat Response
-↓
-User Interface
-
-
-### 🔄 Flow Explanation
-
-1. User enters a repository URL  
-2. Backend detects platform (**GitHub / GitLab / Bitbucket**)  
-3. README is fetched using respective APIs  
-4. Validation is performed:
-   - URL correctness  
-   - Repository accessibility  
-   - README presence  
-   - Documentation quality  
-5. README is stored as **context**  
-6. README is sent to **LLM for analysis**  
-7. User can ask follow-up questions via chatbot  
-
----
-
-## ✨ Key Features
-
-### 🔍 Core Functionality
-
-- README-based analysis (no assumptions)  
-- Multi-platform support:
-  - ✅ GitHub  
-  - ✅ GitLab  
-  - ✅ Bitbucket  
-
----
-
-### 🤖 Chatbot (NEW)
-
-- Ask questions about the analyzed project  
-- Context-aware responses  
-- No hallucination (strict prompt control)  
-
----
-
-### ⚠️ Smart Validation
-
-- Invalid repository URL detection  
-- Missing README detection  
-- Weak documentation detection  
-
----
-
-### 🧩 Structured Output
-
-- Project Overview  
-- Key Features  
-- Tech Stack  
-- Architecture / Flow  
-- Interview Explanation  
-- Improvements  
-- README Quality Score  
-- Missing Documentation Sections  
-
----
-
-### 🧠 Responsible AI Usage
-
-- No hallucination  
-- Explicit handling of missing data  
-- Clear and honest responses  
-
----
-
-### 🎨 User Experience
-
-- Markdown rendering  
-- Dark mode 🌙  
-- Copy-to-clipboard 📋  
-- Loading indicators ⏳  
-- Chat interface 🤖  
-
----
-
-## 🎓 Who Is This For?
-
-### 👨‍🎓 Students
-
-- Revise projects quickly  
-- Prepare for interviews & viva  
-- Learn structured explanation  
-
----
-
-### 👨‍💻 Developers
-
-- Understand unfamiliar repositories  
-- Evaluate documentation quality  
-- Get quick technical summaries  
-
----
-
-## 🛠️ Tech Stack
-
-### Backend
-
-- **Java** – Core programming language  
-- **Spring Boot** – Backend framework for REST APIs  
-- **REST APIs** – Communication layer  
-- **Maven** – Build and dependency management  
-
----
-
-### Frontend
-
-- **HTML** – Structure  
-- **CSS** – Styling  
-- **JavaScript** – Interactivity  
-- **Marked.js** – Markdown rendering  
-
----
-
-### AI & APIs
-
-- **Groq API** – LLM inference platform  
-- **LLaMA 3.1 (8B)** – AI model for analysis  
-- **GitHub REST API** – Fetch README  
-- **GitLab API** – Fetch README  
-- **Bitbucket API** – Fetch README  
-
----
-
-## 🏗️ Architecture
-
-### 🔹 Design Pattern
-
-The application follows a **modular service-based architecture**:
-
-
-Controller
-↓
-RepositoryService (Interface)
-↓
-├── GitHubService
-├── GitLabService
-├── BitbucketService
+README + Key File Extraction
 ↓
 ContextService
 ↓
-LLMService
+LLMService (LLaMA 3.1 via Groq)
 ↓
-ChatService
-
-
----
-
-### 🔹 Key Design Decisions
-
-- **Abstraction Layer** using `RepositoryService`  
-- Platform-independent design  
-- Context reuse for chatbot  
-- Separation of concerns  
-- Scalable and extensible architecture  
+Structured Analysis / Chat Response
 
 ---
 
-## ⚙️ Installation & Setup
+## 🔹 Design Decisions
 
-### 🔹 Prerequisites
-
-- Java 17+  
-- Maven  
-- Git  
+* Modular service-based architecture
+* Repository abstraction using `RepositoryService`
+* Context reuse for chatbot continuity
+* Platform-independent repository handling
+* Separation of concerns
+* Scalable and extensible design
 
 ---
 
-### 🔹 Clone the Repository
+# ⚙️ Installation & Setup
+
+## 🔹 Prerequisites
+
+* Java 17+
+* Maven
+* Git
+
+---
+
+## 🔹 Clone Repository
 
 ```bash
-git clone https://github.com/your-username/project-analyzer.git
-cd project-analyzer
-🔹 Configure Environment Variables
-Windows (PowerShell)
+git clone https://github.com/Hitesh-Kumar-S/repomind-ai.git
+cd repomind-ai
+```
+
+---
+
+## 🔹 Configure Environment Variables
+
+### Windows (PowerShell)
+
+```powershell
 setx GROQ_API_KEY "your_api_key"
-Linux / Mac
-export GROQ_API_KEY=your_api_key
-🔹 Configure Application
+```
 
-In application.properties:
+### Linux / macOS
 
+```bash
+export GROQ_API_KEY="your_api_key"
+```
+
+---
+
+## 🔹 Configure Application
+
+Inside `application.properties`:
+
+```properties
 groq.api.key=${GROQ_API_KEY}
-🔹 Build the Project
+```
+
+---
+
+## 🔹 Build Project
+
+```bash
 mvn clean install
-🔹 Run the Application
+```
+
+---
+
+## 🔹 Run Application
+
+```bash
 mvn spring-boot:run
-🔹 Access the App
+```
+
+---
+
+## 🔹 Access Application
+
+```text
 http://localhost:8080
-📌 Usage
-🔹 Example 1 — Analyze Repository
+```
 
-Input:
+---
 
+# 🐳 Docker Support
+
+## 🔹 Build Docker Image
+
+```bash
+docker build -t repomind-ai .
+```
+
+---
+
+## 🔹 Run Docker Container
+
+```bash
+docker run -d -p 8080:8080 \
+-e GROQ_API_KEY=your_api_key \
+--name repomind-container \
+repomind-ai
+```
+
+---
+
+# ☁️ AWS Deployment
+
+RepoMind AI has been successfully tested on:
+
+* ✅ AWS EC2
+* ✅ Dockerized environment
+
+Deployment includes:
+
+* EC2 instance setup
+* Docker containerization
+* Environment variable configuration
+* Public access via port `8080`
+
+---
+
+# 📌 Usage
+
+## 🔹 Analyze Repository
+
+Example:
+
+```text
 https://github.com/spring-projects/spring-boot
+```
 
-Output:
+Generated Output:
 
-Project overview
-Features
-Tech stack
-Architecture
-Interview explanation
-🔹 Example 2 — Chatbot
+* Project Overview
+* Features
+* Tech Stack
+* Architecture
+* Interview Explanation
+* README Quality Score
 
-After analysis, ask:
+---
 
-What is the tech stack?
-Explain the architecture
+## 🔹 Ask Questions
+
+Example chatbot questions:
+
+```text
+What is the architecture?
+Why is Spring Boot used?
 What improvements can be made?
-⚠️ Important Notes
-Only public repositories are supported
-README.md must be present
-Better documentation → better analysis
-🔮 Future Enhancements
-Private repository support (authentication)
-Caching for faster responses
-Advanced README scoring
-Code-level analysis (beyond README)
-RAG-based full repo understanding
-🚀 Deployment
-Designed for deployment on Render
-Supports Docker containerization
-Uses environment variables for secrets
-🔐 Security
-API keys are NOT stored in code
-Uses environment variables
-Prevents secret exposure
-📄 License
+Explain the tech stack.
+```
+
+---
+
+# 📸 Screenshots
+
+## 🔹 Home Page
+
+![alt text](<Screenshot 2026-05-23 225306.png>)
+
+## 🔹 Dark Mode UI
+
+![alt text](<Screenshot 2026-05-24 012450.png>)
+
+## 🔹 AI Analysis Output
+
+![alt text](<Screenshot 2026-05-24 012707.png>)
+
+![alt text](<Screenshot 2026-05-23 225453.png>)
+
+ ![alt text](<Screenshot 2026-05-23 225823.png>)
+
+
+---
+
+# ⚠️ Important Notes
+
+* Only public repositories are supported
+* Better README quality → better AI analysis
+* README-driven analysis reduces hallucination risk
+* Large repositories may take longer to analyze
+
+---
+
+# 🔮 Future Enhancements
+
+* Private repository authentication
+* Repository caching
+* Advanced README scoring
+* Code-level analysis
+* RAG-based repository understanding
+* Exportable PDF analysis reports
+* Architecture visualization
+
+---
+
+# 🔐 Security
+
+* API keys are NOT stored in code
+* Uses environment variables
+* Prevents secret exposure
+* No sensitive repository storage
+
+---
+
+# 📄 License
 
 This project is intended for:
 
-Learning
-Demonstration
-Portfolio use
-🙌 Final Note
+* Learning
+* Demonstration
+* Portfolio use
 
-This project focuses on:
+---
 
-Clean architecture
-User clarity
-Responsible AI usage
-Real-world engineering practices
+# 🙌 Final Thoughts
 
-It is designed to help students succeed in interviews while also being useful for developers.
+RepoMind AI focuses on:
+
+* clean architecture
+* responsible AI usage
+* developer-friendly UX
+* interview-focused project understanding
+
+The goal is to help students and developers confidently understand and present software projects without revisiting the entire codebase repeatedly.

@@ -753,6 +753,21 @@ function toggleInstructions() {
     btn.textContent = isVisible ? "📘 Show Instructions" : "📘 Hide Instructions";
 }
 
+function setLoadingState(isLoading) {
+
+    document.getElementById("analyzeBtn").disabled = isLoading;
+    document.getElementById("repoUrl").disabled = isLoading;
+
+    document.getElementById("sendBtn").disabled = isLoading;
+    document.getElementById("chatInput").disabled = isLoading;
+
+    document.getElementById("modeToggle").style.pointerEvents =
+        isLoading ? "none" : "auto";
+
+    document.getElementById("modeToggle").style.opacity =
+        isLoading ? "0.6" : "1";
+}
+
 function analyzeProject() {
     const repoUrl = document.getElementById("repoUrl").value;
     const result = document.getElementById("result");
@@ -760,7 +775,7 @@ function analyzeProject() {
     const analyzeBtn = document.getElementById("analyzeBtn");
     const copyRow = document.getElementById("copyRow");
 
-    analyzeBtn.disabled = true;
+    setLoadingState(true);
     analyzeBtn.textContent = "Analyzing...";
     copyRow.style.display = "none";
     spinner.style.display = "block";
@@ -793,7 +808,7 @@ const loadingInterval = setInterval(() => {
         clearInterval(loadingInterval);
         spinner.style.display = "none";
         copyRow.style.display = "flex";
-        analyzeBtn.disabled = false;
+        setLoadingState(false);
         analyzeBtn.textContent = "Analyze";
     })
     .catch(err => {
@@ -801,7 +816,7 @@ const loadingInterval = setInterval(() => {
         clearInterval(loadingInterval);
         spinner.style.display = "none";
         copyRow.style.display = "none";
-        analyzeBtn.disabled = false;
+        setLoadingState(false);
         analyzeBtn.textContent = "Analyze";
     });
 }
@@ -809,7 +824,7 @@ const loadingInterval = setInterval(() => {
 function copyResult() {
     const result = document.getElementById("result");
     const copyBtn = document.getElementById("copyBtn");
-    const text = result.innerText;
+    const text = result.textContent;
 
     navigator.clipboard.writeText(text).then(() => {
         copyBtn.textContent = "✅ Copied!";
@@ -870,9 +885,7 @@ function sendMessage() {
     addMessage("user", question);
     input.value = "";
 
-    sendBtn.disabled = true;
-    input.disabled = true;
-
+    setLoadingState(true);
     const typingMsg = addMessage("bot", "", true);
 
     fetch("/chat", {
@@ -890,16 +903,14 @@ function sendMessage() {
     .then(answer => {
         typingMsg.remove();
         addMessage("bot", answer);
-        sendBtn.disabled = false;
-        input.disabled = false;
+        setLoadingState(false);
         input.focus();
         sendBtn.innerHTML = "&#9658;";
     })
     .catch(err => {
         typingMsg.remove();
         addMessage("bot", "❌ Error: " + err.message);
-        sendBtn.disabled = false;
-        input.disabled = false;
+        setLoadingState(false);
         sendBtn.innerHTML = "&#9658;";
     });
 }

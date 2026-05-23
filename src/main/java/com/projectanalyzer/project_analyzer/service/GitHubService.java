@@ -101,10 +101,6 @@ public class GitHubService implements RepositoryService {
             String owner = parts[0];
             String repo = parts[1];
 
-            if (!repoExists(owner, repo)) {
-                return "❌ Repository not found or is private.";
-            }
-
             // ================= PRIMARY =================
 
             try {
@@ -223,10 +219,6 @@ public class GitHubService implements RepositoryService {
             String owner = parts[0];
             String repo = parts[1];
 
-            if (!repoExists(owner, repo)) {
-                return "Repository not found.";
-            }
-
             String apiUrl = "https://api.github.com/repos/" + owner + "/" + repo + "/contents";
 
             HttpEntity<String> entity = new HttpEntity<>(buildHeaders());
@@ -270,10 +262,6 @@ public class GitHubService implements RepositoryService {
 
             String owner = parts[0];
             String repo = parts[1];
-
-            if (!repoExists(owner, repo)) {
-                return "No key files.";
-            }
 
             String apiBase = "https://api.github.com/repos/" + owner + "/" + repo;
 
@@ -346,9 +334,17 @@ public class GitHubService implements RepositoryService {
         HttpHeaders headers = new HttpHeaders();
         headers.set("User-Agent", "RepoMind-AI");
 
-        if (githubToken != null && !githubToken.isBlank()) {
-            headers.setBearerAuth(githubToken);
-        }
+//         if (githubToken != null) {
+
+//     githubToken = githubToken.trim();
+
+//     // if (!githubToken.isEmpty()
+//     //         && !githubToken.equalsIgnoreCase("null")
+//     //         && !githubToken.equalsIgnoreCase("your_token_here")) {
+
+//     //     headers.setBearerAuth(githubToken);
+//     // }
+// }
 
         return headers;
     }

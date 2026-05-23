@@ -4,6 +4,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+
 import java.util.List;
 import java.util.Map;
 
@@ -70,10 +75,6 @@ public class BitbucketService implements RepositoryService {
             String workspace = parts[0];
             String repo = parts[1];
 
-            if (!repoExists(workspace, repo)) {
-                return "❌ Repository not found or is private.";
-            }
-
             // ✅ Added develop branch
             String[] branches = {"main", "master", "develop"};
 
@@ -108,10 +109,6 @@ public class BitbucketService implements RepositoryService {
 
             String workspace = parts[0];
             String repo = parts[1];
-
-            if (!repoExists(workspace, repo)) {
-                return "❌ Repository not found.";
-            }
 
             String baseUrl = "https://api.bitbucket.org/2.0/repositories/"
                     + workspace + "/" + repo + "/src";
@@ -167,110 +164,145 @@ public class BitbucketService implements RepositoryService {
 
     // ===================== FETCH KEY FILES =====================
 
-    public String fetchKeyFiles(String repoUrl) {
-        try {
+public String fetchKeyFiles(String repoUrl) {
+    try {
 
-            if (repoUrl != null && repoUrl.contains("/src/")) {
-                return "❌ Invalid Bitbucket URL.";
-            }
-
-            String[] parts = extractParts(repoUrl);
-            if (parts.length < 2) return "No key files available.";
-
-            String workspace = parts[0];
-            String repo = parts[1];
-
-            if (!repoExists(workspace, repo)) {
-                return "No key files available.";
-            }
-
-            String[] files = {
-        "pom.xml",
-        "package.json",
-        "package-lock.json",
-        "requirements.txt",
-        "build.gradle",
-        "settings.gradle",
-        "Dockerfile",
-        "docker-compose.yml",
-        "application.properties",
-        "application.yml",
-        "README.md"
-};
-
-            String[] branches = {"main", "master", "develop"};
-
-            StringBuilder result = new StringBuilder();
-
-            for (String file : files) {
-                for (String branch : branches) {
-                    try {
-                        String url = "https://api.bitbucket.org/2.0/repositories/"
-                                + workspace + "/"
-                                + repo + "/src/"
-                                + branch + "/"
-                                + file;
-
-                        String content = restTemplate.getForObject(url, String.class);
-
-                        if (content != null && !content.trim().isEmpty()) {
-
-                            if (content.length() < 50) {
-                                return "⚠️ README exists but content is too short.";
-                            }
-
-                            content = content.substring(0, Math.min(content.length(), 1500));
-
-                            result.append("=== ").append(file).append(" ===\n");
-                            result.append(content).append("\n\n");
-
-                            break;
-                        }
-
-                    } catch (Exception ignored) {}
-                }
-            }
-
-            return result.toString().isEmpty()
-                    ? "No key files available."
-                    : result.toString();
-
-        } catch (Exception e) {
-            return "No key files available.";
+        if (repoUrl != null && repoUrl.contains("/src/")) {
+            return "❌ Invalid Bitbucket URL.";
         }
-    }
 
-    // ===================== README HELPER =====================
+        String[] parts = extractParts(repoUrl);
+        if (parts.length < 2) return "No key files available.";
 
-    private String fetchFromBranch(String workspace, String repo, String branch) {
-        try {
-            String[] fileNames = {
-                    "README.md",
-                    "readme.md",
-                    "Readme.md"
-            };
+        String workspace = parts[0];
+        String repo = parts[1];
 
-            for (String file : fileNames) {
+        String[] files = {
+                "pom.xml",
+                "package.json",
+                "package-lock.json",
+                "requirements.txt",
+                "build.gradle",
+                "settings.gradle",
+                "Dockerfile",
+                "docker-compose.yml",
+                "application.properties",
+                "application.yml",
+                "README.md"
+        };
+
+        String[] branches = {"main", "master", "develop"};
+
+        StringBuilder result = new StringBuilder();
+
+        for (String file : files) {
+            for (String branch : branches) {
                 try {
+
                     String url = "https://api.bitbucket.org/2.0/repositories/"
                             + workspace + "/"
                             + repo + "/src/"
                             + branch + "/"
                             + file;
 
-                    String content = restTemplate.getForObject(url, String.class);
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.set("Accept", "text/plain");
+
+                    HttpEntity<String> entity = new HttpEntity<>(headers);
+
+                    ResponseEntity<String> response =
+                            restTemplate.exchange(
+                                    url,
+                                    HttpMethod.GET,
+                                    entity,
+                                    String.class
+                            );
+
+                    String content = response.getBody();
 
                     if (content != null && !content.trim().isEmpty()) {
-                        return content;
+
+                        content = content.substring(
+                                0,
+                                Math.min(content.length(), 1500)
+                        );
+
+                        result.append("=== ")
+                                .append(file)
+                                .append(" ===\n");
+
+                        result.append(content)
+                                .append("\n\n");
+
+                        break;
                     }
 
                 } catch (Exception ignored) {}
             }
-
-            return null;
-
-        } catch (Exception e) {
-            return null;
         }
+
+        return result.toString().isEmpty()
+                ? "No key files available."
+                : result.toString();
+
+    } catch (Exception e) {
+        return "No key files available.";
     }
+}
+
+// ===================== README HELPER =====================
+
+private String fetchFromBranch(String workspace, String repo, String branch) {
+
+    try {
+
+        String[] fileNames = {
+                "README.md",
+                "readme.md",
+                "Readme.md",
+                "README.MD",
+                "README",
+                "readme",
+                "ReadMe.md"
+        };
+
+        for (String file : fileNames) {
+
+            try {
+
+                String url = "https://api.bitbucket.org/2.0/repositories/"
+                        + workspace + "/"
+                        + repo + "/src/"
+                        + branch + "/"
+                        + file;
+
+                HttpHeaders headers = new HttpHeaders();
+                headers.set("Accept", "text/plain");
+
+                HttpEntity<String> entity =
+                        new HttpEntity<>(headers);
+
+                ResponseEntity<String> response =
+                        restTemplate.exchange(
+                                url,
+                                HttpMethod.GET,
+                                entity,
+                                String.class
+                        );
+
+                String content = response.getBody();
+
+                if (content != null && !content.trim().isEmpty()) {
+                    return content;
+                }
+
+            } catch (Exception ignored) {}
+        }
+
+        return null;
+
+    } catch (Exception e) {
+        return null;
+    }
+}
 }
