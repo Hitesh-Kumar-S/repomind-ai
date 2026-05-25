@@ -57,28 +57,6 @@ public class GitHubService implements RepositoryService {
         try { Thread.sleep(ms); } catch (InterruptedException ignored) {}
     }
 
-    // ===================== CHECK REPO EXISTS =====================
-
-    private boolean repoExists(String owner, String repo) {
-        try {
-            String url = "https://api.github.com/repos/" + owner + "/" + repo;
-
-            HttpEntity<String> entity = new HttpEntity<>(buildHeaders());
-
-            ResponseEntity<String> response = exchangeWithRetry(
-                    url,
-                    HttpMethod.GET,
-                    entity,
-                    String.class
-            );
-
-            return response.getStatusCode().is2xxSuccessful();
-
-        } catch (HttpClientErrorException e) {
-            return false; // FIXED
-        }
-    }
-
     // ===================== FETCH README =====================
 
     @Override
@@ -86,17 +64,17 @@ public class GitHubService implements RepositoryService {
 
         try {
             if (repoUrl == null || repoUrl.trim().isEmpty()) {
-                return "❌ Invalid repository URL.";
+                return "FETCH_FAILED";
             }
 
             repoUrl = normalizeUrl(repoUrl);
 
             if (!repoUrl.startsWith("https://github.com/")) {
-                return "❌ Only GitHub URLs are supported.";
+                return "FETCH_FAILED";
             }
 
             String[] parts = repoUrl.replace("https://github.com/", "").split("/");
-            if (parts.length < 2) return "❌ Invalid repository URL.";
+            if (parts.length < 2) return "FETCH_FAILED";;
 
             String owner = parts[0];
             String repo = parts[1];
@@ -121,7 +99,7 @@ public class GitHubService implements RepositoryService {
                 JSONObject json = new JSONObject(response.getBody());
 
                 if (!json.has("content")) {
-                    return "❌ README file not found in this repository.";
+                    return "FETCH_FAILED";
                 }
 
                 String encoded = json.getString("content");
@@ -131,28 +109,37 @@ public class GitHubService implements RepositoryService {
                 ).trim();
 
                 if (decoded.length() < MIN_README_LENGTH) {
-                    return "⚠️ README found, but content is too short or insufficient.";
+                    return "WEAK_README";
                 }
 
                 return decoded;
 
             } catch (HttpClientErrorException e) {
-
+ 
                 if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
                     // fallback
                 } else if (e.getStatusCode() == HttpStatus.FORBIDDEN) {
-                    return "⚠️ GitHub API rate limit exceeded. Please try again later.";
+                    return "FETCH_FAILED";
                 } else if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
-                    return "❌ GitHub authentication failed. Check API token.";
+                    return "AUTH_FAILED";
                 } else {
-                    return "❌ Error fetching README: " + e.getMessage();
+                    return "FETCH_FAILED";
                 }
             }
 
             // ================= FALLBACK =================
 
-            String[] branches = {"main", "master"};
-            String[] files = {"README.md", "readme.md", "Readme.md"};
+            String[] branches = {"main", "master", "develop"};
+            
+            String[] files = {
+    "README.md",
+    "readme.md",
+    "Readme.md",
+    "README.MD",
+    "README",
+    "readme",
+    "ReadMe.md"
+};
 
             for (String branch : branches) {
                 for (String file : files) {
@@ -183,25 +170,25 @@ public class GitHubService implements RepositoryService {
                         ).trim();
 
                         if (decoded.length() < MIN_README_LENGTH) {
-                            return "⚠️ README found, but content is too short.";
+                            return "WEAK_README";
                         }
 
                         return decoded;
 
                     } catch (HttpClientErrorException e) {
-
+    
                         if (e.getStatusCode() == HttpStatus.FORBIDDEN) {
-                            return "⚠️ GitHub API rate limit exceeded.";
+                            return "FETCH_FAILED";
                         }
 
                     } catch (Exception ignored) {}
                 }
             }
 
-            return "❌ README not found in this repository.";
+            return "FETCH_FAILED";
 
         } catch (Exception e) {
-            return "❌ Unexpected error: " + e.getMessage();
+            return "FETCH_FAILED";
         }
     }
 
@@ -254,98 +241,203 @@ public class GitHubService implements RepositoryService {
 
     public String fetchKeyFiles(String repoUrl) {
 
-        try {
-            repoUrl = normalizeUrl(repoUrl);
+    try {
 
-            String[] parts = repoUrl.replace("https://github.com/", "").split("/");
-            if (parts.length < 2) return "No key files.";
+        repoUrl = normalizeUrl(repoUrl);
 
-            String owner = parts[0];
-            String repo = parts[1];
+        String[] parts =
+                repoUrl.replace("https://github.com/", "").split("/");
 
-            String apiBase = "https://api.github.com/repos/" + owner + "/" + repo;
-
-            String[] importantFiles = {
-        "pom.xml",
-        "package.json",
-        "package-lock.json",
-        "requirements.txt",
-        "build.gradle",
-        "settings.gradle",
-        "Dockerfile",
-        "docker-compose.yml",
-        "application.properties",
-        "application.yml",
-        "README.md"
-};
-
-            HttpEntity<String> entity = new HttpEntity<>(buildHeaders());
-
-            StringBuilder result = new StringBuilder();
-
-            for (String fileName : importantFiles) {
-                try {
-
-                    String url = apiBase + "/contents/" + fileName;
-
-                    ResponseEntity<Map> response = exchangeWithRetry(
-                            url,
-                            HttpMethod.GET,
-                            entity,
-                            Map.class
-                    );
-
-                    if (response.getBody() == null) continue;
-
-                    Object contentObj = response.getBody().get("content");
-                    if (contentObj == null) continue;
-
-                    String content = (String) contentObj;
-
-                    String decoded = new String(
-                            Base64.getDecoder().decode(content.replaceAll("\\s", ""))
-                    );
-
-                    decoded = decoded.substring(0, Math.min(decoded.length(), 1500));
-
-                    result.append("=== ").append(fileName).append(" ===\n");
-                    result.append(decoded).append("\n\n");
-
-                } catch (Exception ignored) {}
-            }
-
-            return result.toString();
-
-        } catch (Exception e) {
-            return "Could not fetch key files.";
+        if (parts.length < 2) {
+            return "No key files.";
         }
+
+        String owner = parts[0];
+        String repo = parts[1];
+
+        String apiBase =
+                "https://api.github.com/repos/" + owner + "/" + repo;
+
+        // ===================== IMPORTANT FILES =====================
+
+        String[] importantFiles = {
+                "pom.xml",
+                "package.json",
+                "package-lock.json",
+                "requirements.txt",
+                "build.gradle",
+                "settings.gradle",
+                "Dockerfile",
+                "docker-compose.yml",
+                "application.properties",
+                "application.yml"
+        };
+
+        // ===================== README VARIATIONS =====================
+
+        String[] readmeFiles = {
+                "README.md",
+                "readme.md",
+                "Readme.md",
+                "README.MD",
+                "README",
+                "readme",
+                "ReadMe.md"
+        };
+
+        HttpEntity<String> entity =
+                new HttpEntity<>(buildHeaders());
+
+        StringBuilder result = new StringBuilder();
+
+        // ===================== NORMAL FILES =====================
+
+        for (String fileName : importantFiles) {
+
+            try {
+
+                String url =
+                        apiBase + "/contents/" + fileName;
+
+                ResponseEntity<Map> response =
+                        exchangeWithRetry(
+                                url,
+                                HttpMethod.GET,
+                                entity,
+                                Map.class
+                        );
+
+                if (response.getBody() == null) {
+                    continue;
+                }
+
+                Object contentObj =
+                        response.getBody().get("content");
+
+                if (contentObj == null) {
+                    continue;
+                }
+
+                String content = (String) contentObj;
+
+                String decoded = new String(
+                        Base64.getDecoder().decode(
+                                content.replaceAll("\\s", "")
+                        )
+                );
+
+                decoded = decoded.substring(
+                        0,
+                        Math.min(decoded.length(), 1500)
+                );
+
+                result.append("=== ")
+                        .append(fileName)
+                        .append(" ===\n");
+
+                result.append(decoded)
+                        .append("\n\n");
+
+            } catch (Exception ignored) {}
+        }
+
+        // ===================== README FILES =====================
+
+        for (String readmeFile : readmeFiles) {
+
+            try {
+
+                String url =
+                        apiBase + "/contents/" + readmeFile;
+
+                ResponseEntity<Map> response =
+                        exchangeWithRetry(
+                                url,
+                                HttpMethod.GET,
+                                entity,
+                                Map.class
+                        );
+
+                if (response.getBody() == null) {
+                    continue;
+                }
+
+                Object contentObj =
+                        response.getBody().get("content");
+
+                if (contentObj == null) {
+                    continue;
+                }
+
+                String content = (String) contentObj;
+
+                String decoded = new String(
+                        Base64.getDecoder().decode(
+                                content.replaceAll("\\s", "")
+                        )
+                );
+
+                decoded = decoded.substring(
+                        0,
+                        Math.min(decoded.length(), 1500)
+                );
+
+                result.append("=== ")
+                        .append(readmeFile)
+                        .append(" ===\n");
+
+                result.append(decoded)
+                        .append("\n\n");
+
+                break;
+
+            } catch (Exception ignored) {}
+        }
+
+        return result.toString().isEmpty()
+                ? "No key files."
+                : result.toString();
+
+    } catch (Exception e) {
+        return "Could not fetch key files.";
     }
+}
 
     // ===================== HELPERS =====================
 
-    private String normalizeUrl(String repoUrl) {
-        repoUrl = repoUrl.trim();
-        if (repoUrl.endsWith("/")) repoUrl = repoUrl.substring(0, repoUrl.length() - 1);
-        if (repoUrl.endsWith(".git")) repoUrl = repoUrl.substring(0, repoUrl.length() - 4);
-        return repoUrl;
+private String normalizeUrl(String repoUrl) {
+
+    repoUrl = repoUrl.trim();
+
+    if (repoUrl.endsWith("/")) {
+        repoUrl = repoUrl.substring(0, repoUrl.length() - 1);
     }
 
-    private HttpHeaders buildHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("User-Agent", "RepoMind-AI");
-
-//         if (githubToken != null) {
-
-//     githubToken = githubToken.trim();
-
-//     // if (!githubToken.isEmpty()
-//     //         && !githubToken.equalsIgnoreCase("null")
-//     //         && !githubToken.equalsIgnoreCase("your_token_here")) {
-
-//     //     headers.setBearerAuth(githubToken);
-//     // }
-// }
-
-        return headers;
+    if (repoUrl.endsWith(".git")) {
+        repoUrl = repoUrl.substring(0, repoUrl.length() - 4);
     }
+
+    return repoUrl;
+}
+
+private HttpHeaders buildHeaders() {
+
+    HttpHeaders headers = new HttpHeaders();
+
+    headers.set("User-Agent", "RepoMind-AI");
+
+    if (githubToken != null) {
+
+        githubToken = githubToken.trim();
+
+        if (!githubToken.isEmpty()
+                && !githubToken.equalsIgnoreCase("null")
+                && !githubToken.equalsIgnoreCase("your_token_here")) {
+
+            headers.setBearerAuth(githubToken);
+        }
+    }
+
+    return headers;
+}
 }

@@ -607,7 +607,7 @@ body.dark .chat-input-area {
 <div class="panel left-panel">
 
 <div class="top">
-    <h2>🚀 RepoMind AI</h2>
+    <h2>RepoMind AI</h2>
     <div class="toggle-switch" onclick="toggleTheme()">
         <span class="theme-icon">☀️</span>
         <div class="switch"></div>
@@ -626,7 +626,7 @@ body.dark .chat-input-area {
 
 <div id="instructions" class="instructions">
 
-    <h3>📌 General Guidelines</h3>
+    <h3>General Guidelines</h3>
     <ul>
         <li>Make sure the repository is <span class="hl">public</span>.</li>
         <li>A <span class="hl">README.md</span> should be available in the <span class="hl">root directory</span>.</li>
@@ -643,29 +643,29 @@ body.dark .chat-input-area {
 
     <hr>
 
-    <h3>🌐 Platform Tips</h3>
+    <h3>Platform Tips</h3>
 
-    <p><strong>🐙 GitHub</strong></p>
+    <p><strong>GitHub</strong></p>
     <ul>
         <li><span class="hl">https://github.com/username/repository</span></li>
         <li>README in <span class="hl">root</span></li>
-        <li>Branch: <span class="hl">main</span> or <span class="hl">master</span></li>
+        <li>Branch: <span class="hl">main</span> or <span class="hl">master</span> or <span class="hl">develop</span></li>
     </ul>
 
-    <p><strong>🦊 GitLab</strong></p>
+    <p><strong>GitLab</strong></p>
     <ul>
         <li><span class="hl">https://gitlab.com/username/repository</span></li>
         <li>Repository should be <span class="hl">public</span></li>
         <li>README in <span class="hl">root</span></li>
-        <li>Branch: <span class="hl">main</span> or <span class="hl">master</span></li>
+        <li>Branch: <span class="hl">main</span> or <span class="hl">master</span> or <span class="hl">develop</span></li>
     </ul>
 
-    <p><strong>🪣 Bitbucket</strong></p>
+    <p><strong>Bitbucket</strong></p>
     <ul>
         <li><span class="hl">https://bitbucket.org/workspace/repository</span></li>
         <li>Avoid <span class="hl">/src/branch</span></li>
         <li>README in <span class="hl">root</span></li>
-        <li>Branch: <span class="hl">main</span> or <span class="hl">master</span></li>
+        <li>Branch: <span class="hl">main</span> or <span class="hl">master</span> or <span class="hl">develop</span></li>
     </ul>
 
 </div>
@@ -699,7 +699,7 @@ body.dark .chat-input-area {
 
         <!-- Info Banner -->
         <div class="chat-info-banner">
-            <p>👋 How to use the modes:</p>
+            <p>How to use the modes:</p>
             <ul>
                 <li>
     <span class="hl">Accurate Mode</span> → Uses the project <span class="hl">README</span> as the primary source and provides reliable, project-grounded answers. Best for factual details and interview preparation.
@@ -718,8 +718,8 @@ body.dark .chat-input-area {
         <div class="mode-toggle-wrapper">
             <div class="mode-toggle" id="modeToggle" onclick="toggleMode()">
                 <div class="mode-slider"></div>
-                <span class="mode-label" id="labelStrict">🎯 Accurate</span>
-                <span class="mode-label" id="labelSmart">🧠 Detailed</span>
+                <span class="mode-label" id="labelStrict">Accurate</span>
+                <span class="mode-label" id="labelSmart">Detailed</span>
             </div>
         </div>
 
@@ -775,16 +775,18 @@ function analyzeProject() {
     const analyzeBtn = document.getElementById("analyzeBtn");
     const copyRow = document.getElementById("copyRow");
 
+    document.getElementById("chatBox").innerHTML = "";
+
     setLoadingState(true);
     analyzeBtn.textContent = "Analyzing...";
     copyRow.style.display = "none";
     spinner.style.display = "block";
 
     const loadingMessages = [
-    "🔍 Reading repository structure...",
-    "📄 Analyzing README...",
-    "🧠 Understanding technologies...",
-    "⚡ Generating AI insights..."
+    "Reading repository structure...",
+    "Analyzing README...",
+    "Understanding technologies...",
+    "Generating AI insights..."
 ];
 
 let msgIndex = 0;
@@ -944,12 +946,12 @@ document.addEventListener("DOMContentLoaded", () => {
         Connect with the Developer →
         <a href="https://www.linkedin.com/in/hitesh-kumar-s-579b922b0/" target="_blank"
            style="color: var(--primary); font-weight: 600; text-decoration: none; margin-left: 8px;">
-            💼 LinkedIn
+            LinkedIn
         </a>
         <span style="margin: 0 6px;">|</span>
         <a href="https://codolio.com/profile/Hitesh_Kumar_S" target="_blank"
            style="color: var(--primary); font-weight: 600; text-decoration: none;">
-            👨‍💻 Codolio
+            Codolio
         </a>
     </span>
 

@@ -35,7 +35,6 @@ public class ContextService {
         this.keyFiles = keyFiles;
     }
 
-    // 🔥 FIX: Missing getter (this caused your error)
     public String getKeyFiles() {
         return keyFiles;
     }
@@ -43,13 +42,13 @@ public class ContextService {
     // ===================== CONTEXT CHECK =====================
 
     public boolean hasContext() {
-        return currentReadme != null && !currentReadme.isEmpty();
+        return currentReadme != null && !currentReadme.isBlank();
     }
 
     public void clear() {
         this.currentReadme = null;
         this.repoStructure = null;
-        this.keyFiles = null; // 🔥 FIX: reset properly
+        this.keyFiles = null; 
     }
 
     // ===================== BUILD CONTEXT =====================

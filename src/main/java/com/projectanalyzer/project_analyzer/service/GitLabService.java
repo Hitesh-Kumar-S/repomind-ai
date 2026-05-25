@@ -28,116 +28,151 @@ public class GitLabService implements RepositoryService {
         return projectPath.replace("/", "%2F");
     }
 
-    // ===================== CHECK PROJECT EXISTS =====================
-
-    private boolean projectExists(String encodedPath) {
-        try {
-            String url = "https://gitlab.com/api/v4/projects/" + encodedPath;
-            restTemplate.getForObject(url, Map.class);
-            return true;
-        } catch (HttpClientErrorException e) {
-            return false;
-        }
-    }
-
     // ===================== FETCH README =====================
 
-    @Override
-    public String fetchReadme(String repoUrl) {
+@Override
+public String fetchReadme(String repoUrl) {
+
+    try {
+
+        if (repoUrl == null || !repoUrl.startsWith("https://gitlab.com/")) {
+            return "FETCH_FAILED";
+        }
+
+        String projectPath = repoUrl
+                .replace("https://gitlab.com/", "")
+                .replaceAll("/$", "");
+
+        String encodedPath = projectPath.replace("/", "%2F");
+
+        Integer projectId = null;
+
+        // ===================== STEP 1: DIRECT API =====================
+
         try {
-            if (repoUrl == null || !repoUrl.startsWith("https://gitlab.com/")) {
-                return "INVALID_URL";
-            }
 
-            String projectPath = repoUrl
-                    .replace("https://gitlab.com/", "")
-                    .replaceAll("/$", "");
+            String url =
+                    "https://gitlab.com/api/v4/projects/" + encodedPath;
 
-            String encodedPath = projectPath.replace("/", "%2F");
+            Map<String, Object> project =
+                    restTemplate.getForObject(url, Map.class);
 
-            Integer projectId = null;
+            if (project != null) {
 
-            // 🔥 STEP 1: Try direct API
-            try {
-                String url = "https://gitlab.com/api/v4/projects/" + encodedPath;
-
-                Map<String, Object> project =
-                        restTemplate.getForObject(url, Map.class);
-
-                // ✅ FIX: Safe ID casting
                 Object idObj = project.get("id");
 
                 if (idObj instanceof Integer) {
                     projectId = (Integer) idObj;
+
                 } else if (idObj instanceof Number) {
                     projectId = ((Number) idObj).intValue();
                 }
+            }
 
-            } catch (Exception ignored) {}
+        } catch (Exception ignored) {}
 
-            // 🔥 STEP 2: Fallback to search
-            if (projectId == null) {
+        // ===================== STEP 2: SEARCH FALLBACK =====================
 
-                String repoName = projectPath.substring(projectPath.lastIndexOf("/") + 1);
+        if (projectId == null) {
 
-                String searchUrl =
-                        "https://gitlab.com/api/v4/projects?search=" + repoName;
+            String repoName =
+                    projectPath.substring(projectPath.lastIndexOf("/") + 1);
 
-                List<Map<String, Object>> projects =
-                        restTemplate.getForObject(searchUrl, List.class);
+            String searchUrl =
+                    "https://gitlab.com/api/v4/projects?search=" + repoName;
 
-                if (projects != null) {
-                    for (Map<String, Object> project : projects) {
+            List<Map<String, Object>> projects =
+                    restTemplate.getForObject(searchUrl, List.class);
 
-                        String path = (String) project.get("path");
+            if (projects != null) {
 
-                        if (repoName.equalsIgnoreCase(path)) {
+                for (Map<String, Object> project : projects) {
 
-                            // ✅ FIX: Safe ID casting here too
-                            Object idObj = project.get("id");
+                    String pathWithNamespace =
+                            (String) project.get("path_with_namespace");
 
-                            if (idObj instanceof Integer) {
-                                projectId = (Integer) idObj;
-                            } else if (idObj instanceof Number) {
-                                projectId = ((Number) idObj).intValue();
-                            }
+                    if (projectPath.equalsIgnoreCase(pathWithNamespace)) {
 
-                            break;
+                        Object idObj = project.get("id");
+
+                        if (idObj instanceof Integer) {
+                            projectId = (Integer) idObj;
+
+                        } else if (idObj instanceof Number) {
+                            projectId = ((Number) idObj).intValue();
                         }
+
+                        break;
                     }
                 }
             }
+        }
 
-            // ❌ Still not found
-            if (projectId == null) {
-                return "INVALID_URL";
-            }
+        // ===================== PROJECT NOT FOUND =====================
 
-            // 🔥 STEP 3: Fetch README
-            // ✅ FIX: Added develop branch
-            String[] branches = {"main", "master", "develop"};
+        if (projectId == null) {
+            return "FETCH_FAILED";
+        }
 
-            for (String branch : branches) {
+        // ===================== README FETCH =====================
+
+        String[] branches = {"main", "master", "develop"};
+
+        String[] readmeFiles = {
+                "README.md",
+                "readme.md",
+                "Readme.md",
+                "README.MD",
+                "README",
+                "readme",
+                "ReadMe.md"
+        };
+
+        boolean weakReadmeFound = false;
+
+        for (String branch : branches) {
+
+            for (String readmeFile : readmeFiles) {
+
                 try {
-                    String url = "https://gitlab.com/api/v4/projects/"
-                            + projectId
-                            + "/repository/files/README.md/raw?ref=" + branch;
 
-                    String content = restTemplate.getForObject(url, String.class);
+                    String url =
+                            "https://gitlab.com/api/v4/projects/"
+                                    + projectId
+                                    + "/repository/files/"
+                                    + readmeFile.replace("/", "%2F")
+                                    + "/raw?ref=" + branch;
+
+                    String content =
+                            restTemplate.getForObject(url, String.class);
 
                     if (content != null && !content.isEmpty()) {
+
+                        if (content.trim().length() < 50) {
+
+                            weakReadmeFound = true;
+
+                            continue;
+                        }
+
                         return content;
                     }
 
                 } catch (Exception ignored) {}
             }
-
-            return "README_NOT_FOUND";
-
-        } catch (Exception e) {
-            return "README_NOT_FOUND";
         }
+
+        if (weakReadmeFound) {
+            return "WEAK_README";
+        }
+
+        return "FETCH_FAILED";
+
+    } catch (Exception e) {
+
+        return "FETCH_FAILED";
     }
+}
 
     // ===================== FETCH STRUCTURE =====================
 
@@ -145,15 +180,11 @@ public class GitLabService implements RepositoryService {
     public String fetchRepoStructure(String repoUrl) {
         try {
             if (repoUrl == null || !repoUrl.startsWith("https://gitlab.com/")) {
-                return "INVALID_URL";
+                return "Could not fetch repository structure.";
             }
 
             String projectPath = extractProjectPath(repoUrl);
             String encodedPath = encodeProjectPath(projectPath);
-
-            if (!projectExists(encodedPath)) {
-                return "INVALID_URL";
-            }
 
             String apiUrl = "https://gitlab.com/api/v4/projects/"
                     + encodedPath
@@ -186,63 +217,121 @@ public class GitLabService implements RepositoryService {
     // ===================== FETCH KEY FILES =====================
 
     public String fetchKeyFiles(String repoUrl) {
-        try {
-            String projectPath = extractProjectPath(repoUrl);
-            String encodedPath = encodeProjectPath(projectPath);
 
-            if (!projectExists(encodedPath)) {
-                return "No key files available.";
+    try {
+
+        String projectPath = extractProjectPath(repoUrl);
+        String encodedPath = encodeProjectPath(projectPath);
+
+        String[] files = {
+                "pom.xml",
+                "package.json",
+                "package-lock.json",
+                "requirements.txt",
+                "build.gradle",
+                "settings.gradle",
+                "Dockerfile",
+                "docker-compose.yml",
+                "application.properties",
+                "application.yml"
+        };
+
+        String[] readmeFiles = {
+                "README.md",
+                "readme.md",
+                "Readme.md",
+                "README.MD",
+                "README",
+                "readme",
+                "ReadMe.md"
+        };
+
+        String[] branches = {"main", "master", "develop"};
+
+        StringBuilder result = new StringBuilder();
+
+        // ===================== NORMAL KEY FILES =====================
+
+        for (String file : files) {
+
+            for (String branch : branches) {
+
+                try {
+
+                    String url = "https://gitlab.com/api/v4/projects/"
+                            + encodedPath
+                            + "/repository/files/"
+                            + file.replace("/", "%2F")
+                            + "/raw?ref=" + branch;
+
+                    String content =
+                            restTemplate.getForObject(url, String.class);
+
+                    if (content != null && !content.isEmpty()) {
+
+                        content = content.substring(
+                                0,
+                                Math.min(content.length(), 1500)
+                        );
+
+                        result.append("=== ")
+                                .append(file)
+                                .append(" ===\n");
+
+                        result.append(content)
+                                .append("\n\n");
+
+                        break;
+                    }
+
+                } catch (Exception ignored) {}
             }
-
-            String[] files = {
-        "pom.xml",
-        "package.json",
-        "package-lock.json",
-        "requirements.txt",
-        "build.gradle",
-        "settings.gradle",
-        "Dockerfile",
-        "docker-compose.yml",
-        "application.properties",
-        "application.yml",
-        "README.md"
-};
-
-            // ✅ FIX: Added develop branch
-            String[] branches = {"main", "master", "develop"};
-
-            StringBuilder result = new StringBuilder();
-
-            for (String file : files) {
-                for (String branch : branches) {
-                    try {
-                        String url = "https://gitlab.com/api/v4/projects/"
-                                + encodedPath
-                                + "/repository/files/"
-                                + file.replace("/", "%2F")
-                                + "/raw?ref=" + branch;
-
-                        String content = restTemplate.getForObject(url, String.class);
-
-                        if (content != null && !content.isEmpty()) {
-                            content = content.substring(0, Math.min(content.length(), 1500));
-
-                            result.append("=== ").append(file).append(" ===\n");
-                            result.append(content).append("\n\n");
-
-                            break;
-                        }
-
-                    } catch (Exception ignored) {}
-                }
-            }
-
-            return result.toString().isEmpty()
-                    ? "No key files available."
-                    : result.toString();
-
-        } catch (Exception e) {
-            return "No key files available.";
         }
+
+        // ===================== README VARIATIONS =====================
+
+        for (String readmeFile : readmeFiles) {
+
+            for (String branch : branches) {
+
+                try {
+
+                    String url = "https://gitlab.com/api/v4/projects/"
+                            + encodedPath
+                            + "/repository/files/"
+                            + readmeFile.replace("/", "%2F")
+                            + "/raw?ref=" + branch;
+
+                    String content =
+                            restTemplate.getForObject(url, String.class);
+
+                    if (content != null && !content.isEmpty()) {
+
+                        content = content.substring(
+                                0,
+                                Math.min(content.length(), 1500)
+                        );
+
+                        result.append("=== ")
+                                .append(readmeFile)
+                                .append(" ===\n");
+
+                        result.append(content)
+                                .append("\n\n");
+
+                        break;
+                    }
+
+                } catch (Exception ignored) {}
+            }
+        }
+
+        return result.toString().isEmpty()
+                ? "No key files available."
+                : result.toString();
+
+    } catch (Exception e) {
+        return "No key files available.";
     }
+}
 }

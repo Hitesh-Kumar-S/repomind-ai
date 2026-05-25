@@ -30,6 +30,8 @@ public class AnalyzerController {
     @PostMapping("/analyze")
     public String analyzeProject(@RequestBody String repoUrl) {
 
+        contextService.clear();
+
         String readme;
         String structure;
         String keyFiles;
@@ -67,8 +69,6 @@ Please provide a valid repository URL.
 """;
         }
 
-        // ===================== 🔥 GLOBAL ERROR HANDLING (NEW FIX) =====================
-
         // Stop LLM if any service error occurs
         if (readme != null && (readme.startsWith("❌") || readme.startsWith("⚠️"))) {
             return readme;
@@ -76,32 +76,41 @@ Please provide a valid repository URL.
 
         // ===================== EXISTING VALIDATIONS =====================
 
-        if ("INVALID_URL".equals(readme)) {
-            return """
-❌ **Invalid Repository URL**
+        if ("FETCH_FAILED".equals(readme)) {
+    return """
+❌ Unable to fetch README from this repository.
 
-Please check:
-- Username
-- Repository name
-- URL format
+Possible reasons:
+- Repository does not exist
+- Repository is private
+- README is missing
+- Invalid username or repository name
+- API temporarily unavailable
 
-Example:
-https://github.com/user/repo
+Please verify the repository URL and try again later.
 """;
-        }
+}
+        
+        if ("RATE_LIMIT".equals(readme)) {
+    return """
+⚠️ GitHub API rate limit exceeded.
 
-        if ("README_NOT_FOUND".equals(readme)) {
-            return """
-❌ **README.md Not Found**
+Please try again later.
 
-This repository does not contain a readable README.
-
-👉 Please ensure:
-- Repository is public
-- README.md exists
+💡 Tip:
+You can configure a GitHub Personal Access Token
+to increase API limits.
 """;
-        }
+}
 
+if ("AUTH_FAILED".equals(readme)) {
+    return """
+❌ GitHub authentication failed.
+
+Please check your GitHub API token configuration.
+""";
+}
+        
         if ("WEAK_README".equals(readme)) {
             return """
 ⚠️ **Weak README Detected**
@@ -131,13 +140,14 @@ A README.md file was found, but it appears to be insufficiently detailed.
 
         // ===================== STORE CONTEXT =====================
 
-        contextService.clear();
         contextService.setReadme(readme);
         contextService.setRepoStructure(structure);
         contextService.setKeyFiles(keyFiles);
 
         // ===================== LLM ANALYSIS =====================
 
-        return groqllmService.analyzeProject(readme);
+        return groqllmService.analyzeProject(
+            contextService.buildContext()
+        );
     }
 }

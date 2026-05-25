@@ -23,19 +23,4 @@ public class ChatController {
 
         return ResponseEntity.ok(response);
     }
-
-//     @PostMapping("/chat")
-//     public String chat(@RequestBody String question) {
-
-//         // Clean input
-//         if (question == null || question.trim().isEmpty()) {
-//             return """
-// ⚠️ **Empty Question**
-
-// Please enter a valid question about the project.
-// """;
-//         }
-
-//         return chatService.chat(question.trim());
-//     }
 }

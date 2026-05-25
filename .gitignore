@@ -58,3 +58,6 @@ dist/
 
 # ===== Test Reports =====
 TEST*.xml
+
+# ===== Environment Variables =====
+.env

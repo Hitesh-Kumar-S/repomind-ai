@@ -173,12 +173,16 @@ cd repomind-ai
 
 ```powershell
 setx GROQ_API_KEY "your_api_key"
+setx OPENROUTER_API_KEY "your_openrouter_api_key"
+setx GITHUB_TOKEN "your_github_pat"
 ```
 
 ### Linux / macOS
 
 ```bash
 export GROQ_API_KEY="your_api_key"
+export OPENROUTER_API_KEY="your_openrouter_api_key"
+export GITHUB_TOKEN="your_github_pat"
 ```
 
 ---
@@ -189,6 +193,8 @@ Inside `application.properties`:
 
 ```properties
 groq.api.key=${GROQ_API_KEY}
+openrouter.api.key=${OPENROUTER_API_KEY}
+github.token=${GITHUB_TOKEN}
 ```
 
 ---
@@ -292,19 +298,19 @@ Explain the tech stack.
 
 ## 🔹 Home Page
 
-![alt text](<Screenshot 2026-05-23 225306.png>)
+![Home Page](<Screenshot 2026-05-23 225306.png>)
 
 ## 🔹 Dark Mode UI
 
-![alt text](<Screenshot 2026-05-24 012450.png>)
+![Dark Mode UI](<Screenshot 2026-05-24 012450.png>)
 
 ## 🔹 AI Analysis Output
 
-![alt text](<Screenshot 2026-05-24 012707.png>)
+![AI Analysis Output](<Screenshot 2026-05-24 012707.png>)
 
-![alt text](<Screenshot 2026-05-23 225453.png>)
+![AI Analysis Output](<Screenshot 2026-05-23 225453.png>)
 
- ![alt text](<Screenshot 2026-05-23 225823.png>)
+ ![AI Analysis Output](<Screenshot 2026-05-23 225823.png>)
 
 
 ---
@@ -315,6 +321,7 @@ Explain the tech stack.
 * Better README quality → better AI analysis
 * README-driven analysis reduces hallucination risk
 * Large repositories may take longer to analyze
+* GitHub API authentication is recommended to avoid rate limiting
 
 ---
 
