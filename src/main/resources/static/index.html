@@ -318,29 +318,39 @@ body.dark .chat-info-banner {
 }
 
 .chat-info-banner ul {
-    margin: 6px 0 0;
+    margin: 0;
     padding-left: 18px;
 }
 
 .chat-info-banner li {
-    font-size: 12px;
+    margin-bottom: 10px;
     color: var(--muted);
-    line-height: 1.7;
+}
+
+.chat-info-banner li:last-child {
+    margin-bottom: 0;
 }
 
 .chat-info-banner p {
     margin: 0;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.7;
     color: var(--muted);
-    font-weight: 600;
 }
 
 .chat-info-note {
-    margin-top: 8px;
-    font-size: 11px;
-    color: var(--muted);
-    border-top: 1px solid rgba(91,108,255,0.1);
+    margin-top: 10px;
     padding-top: 8px;
+    border-top: 1px solid rgba(91,108,255,0.1);
+}
+
+.chat-info-note p {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--muted);
 }
 
 /* Mode Toggle - Redesigned */
@@ -622,7 +632,7 @@ body.dark .chat-input-area {
     Gain instant insights into project structure, tech stack, and key features — powered by AI.
 </p>
 
-<div class="toggle-btn" onclick="toggleInstructions()">📘 Show Instructions</div>
+<div class="toggle-btn" onclick="toggleInstructions()">Show Instructions</div>
 
 <div id="instructions" class="instructions">
 
@@ -630,13 +640,14 @@ body.dark .chat-input-area {
     <ul>
         <li>Make sure the repository is <span class="hl">public</span>.</li>
         <li>A <span class="hl">README.md</span> should be available in the <span class="hl">root directory</span>.</li>
-        <li>The default branch is usually <span class="hl">main</span> or <span class="hl">master</span>.</li>
+        <li>The default branch should be <span class="hl">main</span>, <span class="hl">master</span>, or <span class="hl">develop</span>.</li>
         <li>For best results, include:
             <ul>
                 <li><span class="hl">Project overview</span></li>
                 <li><span class="hl">Tech stack</span></li>
                 <li><span class="hl">Architecture</span></li>
                 <li><span class="hl">Features</span></li>
+                <li><span class="hl">Setup and usage instructions</span> (optional but recommended)</li>
             </ul>
         </li>
     </ul>
@@ -648,24 +659,17 @@ body.dark .chat-input-area {
     <p><strong>GitHub</strong></p>
     <ul>
         <li><span class="hl">https://github.com/username/repository</span></li>
-        <li>README in <span class="hl">root</span></li>
-        <li>Branch: <span class="hl">main</span> or <span class="hl">master</span> or <span class="hl">develop</span></li>
     </ul>
 
     <p><strong>GitLab</strong></p>
     <ul>
         <li><span class="hl">https://gitlab.com/username/repository</span></li>
-        <li>Repository should be <span class="hl">public</span></li>
-        <li>README in <span class="hl">root</span></li>
-        <li>Branch: <span class="hl">main</span> or <span class="hl">master</span> or <span class="hl">develop</span></li>
     </ul>
 
     <p><strong>Bitbucket</strong></p>
     <ul>
         <li><span class="hl">https://bitbucket.org/workspace/repository</span></li>
-        <li>Avoid <span class="hl">/src/branch</span></li>
-        <li>README in <span class="hl">root</span></li>
-        <li>Branch: <span class="hl">main</span> or <span class="hl">master</span> or <span class="hl">develop</span></li>
+        <li>Avoid URLs containing <span class="hl">/src/branch</span></li>
     </ul>
 
 </div>
@@ -675,7 +679,7 @@ body.dark .chat-input-area {
     <button id="analyzeBtn" onclick="analyzeProject()">Analyze</button>
 </div>
 
-<div id="spinner">🔍 Reading repository...</div>
+<div id="spinner">Reading repository...</div>
 
 <div class="copy-row" id="copyRow">
     <button class="copy-btn-analysis" id="copyBtn" onclick="copyResult()">📋 Copy</button>
@@ -690,29 +694,65 @@ body.dark .chat-input-area {
 
     <!-- Chat Header -->
     <div class="chat-header">
-        <p class="chat-header-title">💬 RepoMind Copilot</p>
+        <p class="chat-header-title">RepoMind Copilot</p>
         <p class="chat-header-subtitle">Ask anything about your project</p>
     </div>
 
     <!-- Chat Body -->
     <div class="chat-body">
 
-        <!-- Info Banner -->
+        <!-- Info Banner
         <div class="chat-info-banner">
             <p>How to use the modes:</p>
             <ul>
-                <li>
+                <li><p>
     <span class="hl">Accurate Mode</span> → Uses the project <span class="hl">README</span> as the primary source and provides reliable, project-grounded answers. Best for factual details and interview preparation.
-</li>
+                </p></li>
 
-<li>
+<li><p>
+    <br>
     <span class="hl">Detailed Mode</span> → Uses AI knowledge beyond the README for deeper explanations, comparisons, architecture understanding, and improvement suggestions.
-</li>
+</p></li>
             </ul>
             <div class="chat-info-note">
-                ⚠️ AI-generated responses. Please verify important information.
+                <h4>
+                    ⚠️ AI-generated responses. Please verify important information.
+                </h4>
             </div>
-        </div>
+        </div> -->
+
+        <!-- Info Banner -->
+<div class="chat-info-banner">
+
+    <p class="banner-title">How to use the modes:</p>
+
+    <ul>
+        <li>
+            <p class="mode-text">
+                <span class="hl">Accurate Mode</span> →
+                Uses the project <span class="hl">README</span> as the primary source
+                and provides reliable, project-grounded answers.
+                Best for factual details and interview preparation.
+            </p>
+        </li>
+
+        <li>
+            <p class="mode-text">
+                <span class="hl">Detailed Mode</span> →
+                Uses AI knowledge beyond the README for deeper explanations,
+                comparisons, architecture understanding,
+                and improvement suggestions.
+            </p>
+        </li>
+    </ul>
+
+    <div class="chat-info-note">
+        <p class="warning-text">
+            ⚠️ AI-generated responses. Please verify important information.
+        </p>
+    </div>
+
+</div>
 
         <!-- Mode Toggle -->
         <div class="mode-toggle-wrapper">
@@ -750,7 +790,7 @@ function toggleInstructions() {
     const btn = document.querySelector(".toggle-btn");
     const isVisible = box.style.display === "block";
     box.style.display = isVisible ? "none" : "block";
-    btn.textContent = isVisible ? "📘 Show Instructions" : "📘 Hide Instructions";
+    btn.textContent = isVisible ? "Show Instructions" : "Hide Instructions";
 }
 
 function setLoadingState(isLoading) {
