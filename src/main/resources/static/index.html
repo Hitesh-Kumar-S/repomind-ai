@@ -634,7 +634,7 @@ body.dark .chat-input-area {
 
 <div class="toggle-btn" onclick="toggleInstructions()">Show Instructions</div>
 
-<div id="instructions" class="instructions">
+<!-- <div id="instructions" class="instructions">
 
     <h3>General Guidelines</h3>
     <ul>
@@ -672,6 +672,85 @@ body.dark .chat-input-area {
         <li>Avoid URLs containing <span class="hl">/src/branch</span></li>
     </ul>
 
+</div> -->
+
+<div id="instructions" class="instructions">
+
+    <h3>General Guidelines</h3>
+    <ul>
+        <li>Make sure the repository is <span class="hl">public</span>.</li>
+        <li>A <span class="hl">README.md</span> should be available in the <span class="hl">root directory</span>.</li>
+        <li>The default branch should be <span class="hl">main</span>, <span class="hl">master</span>, or <span class="hl">develop</span>.</li>
+
+        <li>For best results, include:
+            <ul>
+                <li><span class="hl">Project overview</span></li>
+                <li><span class="hl">Tech stack</span></li>
+                <li><span class="hl">Architecture</span></li>
+                <li><span class="hl">Features</span></li>
+                <li><span class="hl">Setup and usage instructions</span> (optional but recommended)</li>
+            </ul>
+        </li>
+    </ul>
+
+    <div class="readme-tip">
+        <p>
+            📘 <strong>README Quality Tip</strong>
+        </p>
+
+        <p>
+            Low README scores are completely okay — they simply indicate
+            that the project documentation can be improved for better
+            understanding and analysis quality.
+        </p>
+
+        <p>
+            You can refer to a sample README structure and best practices here:
+        </p>
+
+        <a href="https://github.com/example/sample-readme"
+           target="_blank"
+           class="guide-link">
+            View Sample README
+        </a>
+    </div>
+
+    <hr>
+
+    <h3>Platform Tips</h3>
+
+    <p><strong>GitHub</strong></p>
+    <ul>
+        <li>
+            <span class="hl">
+                https://github.com/username/repository
+            </span>
+        </li>
+    </ul>
+
+    <p><strong>GitLab</strong></p>
+    <ul>
+        <li>
+            <span class="hl">
+                https://gitlab.com/username/repository
+            </span>
+        </li>
+    </ul>
+
+    <p><strong>Bitbucket</strong></p>
+    <ul>
+        <li>
+            <span class="hl">
+                https://bitbucket.org/workspace/repository
+            </span>
+        </li>
+
+        <li>
+            Avoid URLs containing
+            <span class="hl">/src/branch</span>
+        </li>
+    </ul>
+
 </div>
 
 <div class="input-section">
@@ -701,28 +780,8 @@ body.dark .chat-input-area {
     <!-- Chat Body -->
     <div class="chat-body">
 
-        <!-- Info Banner
-        <div class="chat-info-banner">
-            <p>How to use the modes:</p>
-            <ul>
-                <li><p>
-    <span class="hl">Accurate Mode</span> → Uses the project <span class="hl">README</span> as the primary source and provides reliable, project-grounded answers. Best for factual details and interview preparation.
-                </p></li>
-
-<li><p>
-    <br>
-    <span class="hl">Detailed Mode</span> → Uses AI knowledge beyond the README for deeper explanations, comparisons, architecture understanding, and improvement suggestions.
-</p></li>
-            </ul>
-            <div class="chat-info-note">
-                <h4>
-                    ⚠️ AI-generated responses. Please verify important information.
-                </h4>
-            </div>
-        </div> -->
-
         <!-- Info Banner -->
-<div class="chat-info-banner">
+    <div class="chat-info-banner">
 
     <p class="banner-title">How to use the modes:</p>
 
@@ -752,7 +811,7 @@ body.dark .chat-input-area {
         </p>
     </div>
 
-</div>
+    </div>
 
         <!-- Mode Toggle -->
         <div class="mode-toggle-wrapper">
