@@ -175,12 +175,19 @@ body.dark .result {
 .instructions {
     margin-top: 10px;
     padding: 15px;
+
     background: rgba(91,108,255,0.08);
     border-radius: 14px;
+
     display: none;
+
     overflow-y: auto;
-    max-height: 220px;
+
+    max-height: 70vh;
+
     flex-shrink: 0;
+
+    transition: all 0.3s ease;
 }
 
 .instructions h3 {
@@ -413,6 +420,63 @@ body.dark .mode-toggle {
 .mode-toggle:not(.smart) #labelStrict,
 .mode-toggle.smart #labelSmart {
     color: #fff;
+}
+
+.readme-guide-card {
+    margin-top: 18px;
+    padding: 16px;
+
+    border-radius: 12px;
+
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+
+    background: rgba(91, 108, 255, 0.06);
+    border: 1px solid rgba(91, 108, 255, 0.15);
+}
+
+body.dark .readme-guide-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.guide-icon {
+    font-size: 1.8rem;
+    line-height: 1;
+}
+
+.guide-content h4 {
+    margin: 0 0 8px 0;
+}
+
+.guide-content p {
+    margin: 0 0 12px 0;
+    line-height: 1.5;
+    opacity: 0.9;
+}
+
+.guide-button {
+    display: inline-block;
+
+    padding: 6px 12px;
+
+    border-radius: 6px;
+
+    background: #3b82f6;
+    color: white;
+
+    text-decoration: none;
+
+    font-size: 0.9rem;
+    font-weight: 500;
+
+    transition: 0.2s ease;
+}
+
+.guide-button:hover {
+    opacity: 0.92;
+    transform: translateY(-1px);
 }
 
 /* Chat Box */
@@ -693,27 +757,36 @@ body.dark .chat-input-area {
         </li>
     </ul>
 
-    <div class="readme-tip">
-        <p>
-            📘 <strong>README Quality Tip</strong>
-        </p>
+    <div class="readme-guide-card">
+
+    <!-- <div class="guide-icon">
+        📘
+    </div> -->
+
+    <div class="guide-content">
+
+        <h4>Sample README Guide</h4>
 
         <p>
-            Low README scores are completely okay — they simply indicate
-            that the project documentation can be improved for better
-            understanding and analysis quality.
-        </p>
+    For better project analysis and documentation quality,
+    consider adding clear project explanations, architecture details,
+    features, and setup instructions in your README.
+</p>
 
-        <p>
-            You can refer to a sample README structure and best practices here:
-        </p>
+<p>
+    If your README score is lower than expected, you can refer to
+    a sample README structure and documentation best practices below.
+</p>
 
-        <a href="https://github.com/example/sample-readme"
+        <a href="https://github.com/Hitesh-Kumar-S/repomind-ai/blob/main/sample-readme.md"
            target="_blank"
-           class="guide-link">
+           class="guide-button">
             View Sample README
         </a>
+
     </div>
+
+</div>
 
     <hr>
 
