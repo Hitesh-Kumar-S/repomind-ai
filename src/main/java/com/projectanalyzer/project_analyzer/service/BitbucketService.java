@@ -155,8 +155,6 @@ public String fetchRepoStructure(String repoUrl) {
     }
 }
 
-// ===================== FETCH STRUCTURE FROM BRANCH =====================
-
 private String fetchStructureFromBranch(
         String baseUrl,
         String branch
@@ -181,16 +179,7 @@ private String fetchStructureFromBranch(
         StringBuilder structure =
                 new StringBuilder();
 
-        // ===================== LIMIT STRUCTURE SIZE =====================
-
-        int count = 0;
-
         for (Map<String, Object> item : values) {
-
-            // ✅ Prevent huge prompts
-            if (count >= 40) {
-                break;
-            }
 
             String type =
                     (String) item.get("type");
@@ -209,8 +198,6 @@ private String fetchStructureFromBranch(
 
             structure.append(name)
                     .append("\n");
-
-            count++;
         }
 
         return structure.toString();
