@@ -1,0 +1,29 @@
+# Maven
+target/
+.mvn/
+
+# Git
+.git
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment
+.env
+
+# Node
+node_modules/
+
+# Docker
+Dockerfile
+.dockerignore
