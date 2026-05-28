@@ -104,7 +104,7 @@ public String fetchReadme(String repoUrl) {
     }
 }
 
-// ===================== FETCH STRUCTURE =====================
+    // ===================== FETCH STRUCTURE =====================
 
 @Override
 public String fetchRepoStructure(String repoUrl) {
@@ -155,6 +155,8 @@ public String fetchRepoStructure(String repoUrl) {
     }
 }
 
+// ===================== FETCH STRUCTURE FROM BRANCH =====================
+
 private String fetchStructureFromBranch(
         String baseUrl,
         String branch
@@ -176,16 +178,28 @@ private String fetchStructureFromBranch(
         List<Map<String, Object>> values =
                 (List<Map<String, Object>>) response.get("values");
 
-        StringBuilder structure = new StringBuilder();
+        StringBuilder structure =
+                new StringBuilder();
+
+        // ===================== LIMIT STRUCTURE SIZE =====================
+
+        int count = 0;
 
         for (Map<String, Object> item : values) {
 
-            String type = (String) item.get("type");
+            // ✅ Prevent huge prompts
+            if (count >= 40) {
+                break;
+            }
+
+            String type =
+                    (String) item.get("type");
 
             Map<String, Object> pathObj =
                     (Map<String, Object>) item.get("path");
 
-            String name = (String) pathObj.get("name");
+            String name =
+                    (String) pathObj.get("name");
 
             structure.append(
                     "commit_directory".equals(type)
@@ -193,7 +207,10 @@ private String fetchStructureFromBranch(
                             : "[FILE] "
             );
 
-            structure.append(name).append("\n");
+            structure.append(name)
+                    .append("\n");
+
+            count++;
         }
 
         return structure.toString();
@@ -285,7 +302,7 @@ public String fetchKeyFiles(String repoUrl) {
 
                         content = content.substring(
                                 0,
-                                Math.min(content.length(), 1500)
+                                Math.min(content.length(), 1000)
                         );
 
                         result.append("=== ")
@@ -337,7 +354,7 @@ public String fetchKeyFiles(String repoUrl) {
 
                         content = content.substring(
                                 0,
-                                Math.min(content.length(), 1500)
+                                Math.min(content.length(), 1000)
                         );
 
                         result.append("=== ")

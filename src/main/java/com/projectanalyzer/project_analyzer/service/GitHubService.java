@@ -194,48 +194,87 @@ public class GitHubService implements RepositoryService {
 
     // ===================== FETCH STRUCTURE =====================
 
-    @Override
-    public String fetchRepoStructure(String repoUrl) {
+@Override
+public String fetchRepoStructure(String repoUrl) {
 
-        try {
-            repoUrl = normalizeUrl(repoUrl);
+    try {
 
-            String[] parts = repoUrl.replace("https://github.com/", "").split("/");
-            if (parts.length < 2) return "Invalid URL";
+        repoUrl = normalizeUrl(repoUrl);
 
-            String owner = parts[0];
-            String repo = parts[1];
+        String[] parts =
+                repoUrl.replace("https://github.com/", "")
+                        .split("/");
 
-            String apiUrl = "https://api.github.com/repos/" + owner + "/" + repo + "/contents";
+        if (parts.length < 2) {
+            return "Invalid URL";
+        }
 
-            HttpEntity<String> entity = new HttpEntity<>(buildHeaders());
+        String owner = parts[0];
+        String repo = parts[1];
 
-            ResponseEntity<List> response = exchangeWithRetry(
-                    apiUrl,
-                    HttpMethod.GET,
-                    entity,
-                    List.class
-            );
+        String apiUrl =
+                "https://api.github.com/repos/"
+                        + owner + "/"
+                        + repo
+                        + "/contents";
 
-            List<Map<String, Object>> files = response.getBody();
-            if (files == null) return "No structure available.";
+        HttpEntity<String> entity =
+                new HttpEntity<>(buildHeaders());
 
-            StringBuilder structure = new StringBuilder();
+        ResponseEntity<List> response =
+                exchangeWithRetry(
+                        apiUrl,
+                        HttpMethod.GET,
+                        entity,
+                        List.class
+                );
 
-            for (Map<String, Object> file : files) {
-                String name = (String) file.get("name");
-                String type = (String) file.get("type");
+        List<Map<String, Object>> files =
+                response.getBody();
 
-                structure.append("dir".equals(type) ? "[DIR] " : "[FILE] ");
-                structure.append(name).append("\n");
+        if (files == null) {
+            return "No structure available.";
+        }
+
+        StringBuilder structure =
+                new StringBuilder();
+
+        // ===================== LIMIT STRUCTURE SIZE =====================
+
+        int count = 0;
+
+        for (Map<String, Object> file : files) {
+
+            // ✅ Prevent huge prompts
+            if (count >= 40) {
+                break;
             }
 
-            return structure.toString();
+            String name =
+                    (String) file.get("name");
 
-        } catch (Exception e) {
-            return "Could not fetch structure.";
+            String type =
+                    (String) file.get("type");
+
+            structure.append(
+                    "dir".equals(type)
+                            ? "[DIR] "
+                            : "[FILE] "
+            );
+
+            structure.append(name)
+                    .append("\n");
+
+            count++;
         }
+
+        return structure.toString();
+
+    } catch (Exception e) {
+
+        return "Could not fetch structure.";
     }
+}
 
     // ===================== FETCH KEY FILES =====================
 
@@ -328,7 +367,7 @@ public class GitHubService implements RepositoryService {
 
                 decoded = decoded.substring(
                         0,
-                        Math.min(decoded.length(), 1500)
+                        Math.min(decoded.length(), 1000)
                 );
 
                 result.append("=== ")
@@ -379,7 +418,7 @@ public class GitHubService implements RepositoryService {
 
                 decoded = decoded.substring(
                         0,
-                        Math.min(decoded.length(), 1500)
+                        Math.min(decoded.length(), 1000)
                 );
 
                 result.append("=== ")

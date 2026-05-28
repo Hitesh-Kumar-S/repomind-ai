@@ -176,43 +176,75 @@ public String fetchReadme(String repoUrl) {
 
     // ===================== FETCH STRUCTURE =====================
 
-    @Override
-    public String fetchRepoStructure(String repoUrl) {
-        try {
-            if (repoUrl == null || !repoUrl.startsWith("https://gitlab.com/")) {
-                return "Could not fetch repository structure.";
-            }
+@Override
+public String fetchRepoStructure(String repoUrl) {
 
-            String projectPath = extractProjectPath(repoUrl);
-            String encodedPath = encodeProjectPath(projectPath);
+    try {
 
-            String apiUrl = "https://gitlab.com/api/v4/projects/"
-                    + encodedPath
-                    + "/repository/tree?per_page=100";
+        if (repoUrl == null
+                || !repoUrl.startsWith("https://gitlab.com/")) {
 
-            List<Map<String, Object>> files =
-                    restTemplate.getForObject(apiUrl, List.class);
-
-            if (files == null || files.isEmpty()) {
-                return "No repository structure available.";
-            }
-
-            StringBuilder structure = new StringBuilder();
-
-            for (Map<String, Object> file : files) {
-                String name = (String) file.get("name");
-                String type = (String) file.get("type");
-
-                structure.append("tree".equals(type) ? "[DIR] " : "[FILE] ");
-                structure.append(name).append("\n");
-            }
-
-            return structure.toString();
-
-        } catch (Exception e) {
             return "Could not fetch repository structure.";
         }
+
+        String projectPath =
+                extractProjectPath(repoUrl);
+
+        String encodedPath =
+                encodeProjectPath(projectPath);
+
+        String apiUrl =
+                "https://gitlab.com/api/v4/projects/"
+                        + encodedPath
+                        + "/repository/tree?per_page=100";
+
+        List<Map<String, Object>> files =
+                restTemplate.getForObject(apiUrl, List.class);
+
+        if (files == null || files.isEmpty()) {
+
+            return "No repository structure available.";
+        }
+
+        StringBuilder structure =
+                new StringBuilder();
+
+        // ===================== LIMIT STRUCTURE SIZE =====================
+
+        int count = 0;
+
+        for (Map<String, Object> file : files) {
+
+            // ✅ Prevent huge prompts
+            if (count >= 40) {
+                break;
+            }
+
+            String name =
+                    (String) file.get("name");
+
+            String type =
+                    (String) file.get("type");
+
+            structure.append(
+                    "tree".equals(type)
+                            ? "[DIR] "
+                            : "[FILE] "
+            );
+
+            structure.append(name)
+                    .append("\n");
+
+            count++;
+        }
+
+        return structure.toString();
+
+    } catch (Exception e) {
+
+        return "Could not fetch repository structure.";
     }
+}
 
     // ===================== FETCH KEY FILES =====================
 
@@ -271,7 +303,7 @@ public String fetchReadme(String repoUrl) {
 
                         content = content.substring(
                                 0,
-                                Math.min(content.length(), 1500)
+                                Math.min(content.length(), 1000)
                         );
 
                         result.append("=== ")
@@ -309,7 +341,7 @@ public String fetchReadme(String repoUrl) {
 
                         content = content.substring(
                                 0,
-                                Math.min(content.length(), 1500)
+                                Math.min(content.length(), 1000)
                         );
 
                         result.append("=== ")

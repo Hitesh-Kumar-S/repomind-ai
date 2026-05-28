@@ -130,6 +130,11 @@ The README.md provided is missing or insufficient.
 You are an experienced software engineer and technical reviewer helping developers better understand and present their projects.
 
 Analyze the following software project using ONLY the information explicitly available in the provided project context (README, repository structure, and important files).
+
+Keep explanations concise and well-structured.
+Avoid excessively long paragraphs.
+Focus on important insights only.
+
 Do not invent unsupported project-specific details. If information is unclear or unavailable, mention it neutrally.
 If something is not mentioned, gently state that it is not specified in the README.
 
@@ -242,6 +247,7 @@ IMPORTANT:
 - Keep the entire analysis concise and readable.
 - Prefer short paragraphs and focused explanations.
 - Avoid repeating the same idea across multiple sections.
+
 
 Project README:
 """ + readme;
