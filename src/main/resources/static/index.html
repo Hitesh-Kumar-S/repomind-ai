@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Project Analyzer</title>
+
+<!-- <link rel="icon" type="image/png" href="/favicon.png"> -->
+
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+
+<title>RepoMind AI • v1</title>
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
@@ -40,6 +45,60 @@ body {
     font-family: "Segoe UI", sans-serif;
     background: var(--bg-main);
     color: var(--text);
+}
+
+.bg-blob {
+    position: fixed;
+
+    width: 420px;
+    height: 420px;
+
+    border-radius: 50%;
+
+    filter: blur(120px);
+
+    opacity: 0.12;
+
+    z-index: -1;
+
+    animation: floatBlob 18s ease-in-out infinite;
+}
+
+/* Blue Glow */
+.blob1 {
+    background: #4f7cff;
+
+    top: -120px;
+    left: -120px;
+}
+
+/* Purple Glow */
+.blob2 {
+    background: #7b4dff;
+
+    bottom: -140px;
+    right: -100px;
+
+    animation-delay: 4s;
+}
+
+@keyframes floatBlob {
+
+    0% {
+        transform: translate(0px, 0px) scale(1);
+    }
+
+    50% {
+        transform: translate(30px, -20px) scale(1.08);
+    }
+
+    100% {
+        transform: translate(0px, 0px) scale(1);
+    }
+}
+
+body.light .bg-blob {
+    opacity: 0.06;
 }
 
 /* MAIN */
@@ -146,12 +205,20 @@ button {
     color: white;
     border: none;
     cursor: pointer;
+
+    transition: 0.2s ease;
+}
+
+button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    opacity: 0.95;
 }
 
 /* DISABLED BUTTON STATE */
 button:disabled {
-    opacity: 0.6;
+    opacity: 0.55;
     cursor: not-allowed;
+    transform: none;
 }
 
 /* RESULT BOX */
@@ -183,7 +250,7 @@ body.dark .result {
 
     overflow-y: auto;
 
-    max-height: 70vh;
+    max-height: 50vh;
 
     flex-shrink: 0;
 
@@ -265,6 +332,47 @@ body.dark .hl {
 
 .copy-btn-analysis:hover {
     opacity: 1;
+}
+
+.ai-note {
+    margin-top: 12px;
+    font-size: 12px;
+    opacity: 0.8;
+    line-height: 1.5;
+}
+
+.title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.version-badge {
+    padding: 3px 8px;
+
+    border-radius: 999px;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    letter-spacing: 0.3px;
+
+    background: rgba(91,108,255,0.12);
+
+    color: #7c8cff;
+
+    border: 1px solid rgba(91,108,255,0.18);
+
+    position: relative;
+    top: 2px;
+}
+
+body.dark .version-badge {
+    background: rgba(139,156,255,0.12);
+
+    color: #aab4ff;
+
+    border-color: rgba(139,156,255,0.18);
 }
 
 /* ===================== */
@@ -615,13 +723,18 @@ body.dark .bubble pre {
     display: flex;
     gap: 8px;
     align-items: center;
-    padding: 10px 12px;
+
+    padding: 7px 10px;
+
     background: var(--input-bg);
     border: 1px solid var(--input-border);
-    border-radius: 16px;
+
+    border-radius: 14px;
+
     flex-shrink: 0;
     margin-top: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+
+    box-shadow: 0 1px 5px rgba(0,0,0,0.04);
 }
 
 body.dark .chat-input-area {
@@ -645,8 +758,8 @@ body.dark .chat-input-area {
 }
 
 #sendBtn {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     background: var(--primary);
     color: white;
@@ -675,13 +788,22 @@ body.dark .chat-input-area {
 
 <body>
 
+<div class="bg-blob blob1"></div>
+<div class="bg-blob blob2"></div>
+
 <div class="main">
 
 <!-- LEFT PANEL -->
 <div class="panel left-panel">
 
 <div class="top">
+    
+    <div class="title-row">
     <h2>RepoMind AI</h2>
+
+    <span class="version-badge">v1</span>
+</div>
+
     <div class="toggle-switch" onclick="toggleTheme()">
         <span class="theme-icon">☀️</span>
         <div class="switch"></div>
@@ -788,6 +910,11 @@ body.dark .chat-input-area {
 
 </div>
 
+    <p class="ai-note">
+        AI-generated analyses may vary slightly between runs.
+        Different explanations or improvement suggestions are normal.
+    </p>
+
     <hr>
 
     <h3>Platform Tips</h3>
@@ -827,8 +954,14 @@ body.dark .chat-input-area {
 </div>
 
 <div class="input-section">
-    <input id="repoUrl" placeholder="Enter repository URL (GitHub / GitLab / Bitbucket)">
-    <button id="analyzeBtn" onclick="analyzeProject()">Analyze</button>
+    <input id="repoUrl"
+           placeholder="Enter repository URL (GitHub / GitLab / Bitbucket)">
+
+    <button id="analyzeBtn"
+            onclick="analyzeProject()"
+            disabled>
+        Analyze
+    </button>
 </div>
 
 <div id="spinner">Reading repository...</div>
@@ -858,31 +991,38 @@ body.dark .chat-input-area {
 
     <p class="banner-title">How to use the modes:</p>
 
-    <ul>
-        <li>
-            <p class="mode-text">
-                <span class="hl">Accurate Mode</span> →
-                Uses the project <span class="hl">README</span> as the primary source
-                and provides reliable, project-grounded answers.
-                Best for factual details and interview preparation.
-            </p>
-        </li>
-
-        <li>
-            <p class="mode-text">
-                <span class="hl">Detailed Mode</span> →
-                Uses AI knowledge beyond the README for deeper explanations,
-                comparisons, architecture understanding,
-                and improvement suggestions.
-            </p>
-        </li>
-    </ul>
-
-    <div class="chat-info-note">
-        <p class="warning-text">
-            ⚠️ AI-generated responses. Please verify important information.
+<ul>
+    <li>
+        <p class="mode-text">
+            <span class="hl">Accurate Mode</span> →
+            Uses the project <span class="hl">README</span> as the primary source
+            and provides reliable, project-grounded answers.
+            Best for factual details and interview preparation.
         </p>
-    </div>
+    </li>
+
+    <li>
+        <p class="mode-text">
+            <span class="hl">Detailed Mode</span> →
+            Uses AI knowledge beyond the README for deeper explanations,
+            comparisons, architecture understanding,
+            and improvement suggestions.
+        </p>
+    </li>
+
+    <li>
+        <p class="mode-text">
+            Image uploads are currently not supported in the chat.
+            Please ask questions using text only.
+        </p>
+    </li>
+</ul>
+
+<div class="chat-info-note">
+    <p class="warning-text">
+        ⚠️ AI-generated responses. Please verify important information.
+    </p>
+</div>
 
     </div>
 
@@ -900,7 +1040,7 @@ body.dark .chat-input-area {
 
         <!-- Input Area -->
         <div class="chat-input-area">
-            <input id="chatInput" placeholder="Ask something about your project..." autocomplete="off">
+            <input id="chatInput" placeholder="Ask anything about the repository..." autocomplete="off">
             <button id="sendBtn" onclick="sendMessage()" title="Send">&#9658;</button>
         </div>
 
@@ -924,6 +1064,19 @@ function toggleInstructions() {
     box.style.display = isVisible ? "none" : "block";
     btn.textContent = isVisible ? "Show Instructions" : "Hide Instructions";
 }
+
+const repoInput = document.getElementById("repoUrl");
+const analyzeBtn = document.getElementById("analyzeBtn");
+
+repoInput.addEventListener("input", () => {
+
+    if (repoInput.value.trim() !== "") {
+        analyzeBtn.disabled = false;
+    } else {
+        analyzeBtn.disabled = true;
+    }
+
+});
 
 function setLoadingState(isLoading) {
 
