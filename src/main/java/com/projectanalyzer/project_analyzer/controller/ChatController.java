@@ -1,5 +1,7 @@
 package com.projectanalyzer.project_analyzer.controller;
 
+import jakarta.servlet.http.HttpSession;
+import com.projectanalyzer.project_analyzer.model.ContextData;
 import com.projectanalyzer.project_analyzer.dto.ChatRequest;
 import org.springframework.http.ResponseEntity;
 import com.projectanalyzer.project_analyzer.service.ChatService;
@@ -25,19 +27,26 @@ public class ChatController {
 }
 
     @PostMapping("/chat")
-public ResponseEntity<String> chat(@RequestBody ChatRequest request) {
+public ResponseEntity<String> chat(
+        @RequestBody ChatRequest request,
+        HttpSession session
+) {
 
-    if (!contextService.hasContext()) {
+    ContextData context =
+        (ContextData) session.getAttribute("repoContext");
 
-        return ResponseEntity.ok(
-            "Please analyze a repository first before using the chatbot."
-        );
-    }
+if (context == null) {
+
+    return ResponseEntity.ok(
+        "Please analyze a repository first before using the chatbot."
+    );
+}
 
     String response = chatService.chat(
-        request.getQuestion(),
-        request.isStrictMode()
-    );
+    request.getQuestion(),
+    request.isStrictMode(),
+    context.buildContext()
+);
 
     return ResponseEntity.ok(response);
 }

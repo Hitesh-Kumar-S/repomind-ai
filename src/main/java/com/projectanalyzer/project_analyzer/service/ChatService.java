@@ -55,14 +55,7 @@ KEY FILES:
         return response.trim();
     }
 
-    public String chat(String question, boolean strictMode) {
-
-        if (!contextService.hasContext()) {
-            return "❌ Please analyze a repository first.";
-        }
-
-        // 🔥 Use smart context instead of raw buildContext()
-        String context = buildSmartContext();
+    public String chat(String question, boolean strictMode, String context) {
 
         String prompt = strictMode
                 ? buildStrictPrompt(context, question)

@@ -1,5 +1,7 @@
 package com.projectanalyzer.project_analyzer.controller;
 
+import jakarta.servlet.http.HttpSession;
+import com.projectanalyzer.project_analyzer.model.ContextData;
 import com.projectanalyzer.project_analyzer.service.BitbucketService;
 import com.projectanalyzer.project_analyzer.service.ContextService;
 import com.projectanalyzer.project_analyzer.service.GitHubService;
@@ -29,7 +31,10 @@ public class AnalyzerController {
     private ContextService contextService;
 
     @PostMapping("/analyze")
-    public String analyzeProject(@RequestBody String repoUrl) {
+    public String analyzeProject(
+            @RequestBody String repoUrl,
+            HttpSession session
+    ) {
 
         contextService.clear();
 
@@ -141,14 +146,22 @@ A README.md file was found, but it appears to be insufficiently detailed.
 
         // ===================== STORE CONTEXT =====================
 
-        contextService.setReadme(readme);
-        contextService.setRepoStructure(structure);
-        contextService.setKeyFiles(keyFiles);
+        ContextData context =
+        new ContextData(
+                readme,
+                structure,
+                keyFiles
+        );
+
+session.setAttribute(
+        "repoContext",
+        context
+);
 
         // ===================== LLM ANALYSIS =====================
 
         return groqllmService.analyzeProject(
-            contextService.buildContext()
+            context.buildContext()
         );
     }
 
