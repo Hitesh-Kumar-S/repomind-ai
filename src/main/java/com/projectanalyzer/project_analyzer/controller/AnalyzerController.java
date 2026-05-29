@@ -7,6 +7,7 @@ import com.projectanalyzer.project_analyzer.service.GitLabService;
 import com.projectanalyzer.project_analyzer.service.GroqLLMService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
 
 @RestController
 @CrossOrigin
@@ -150,4 +151,12 @@ A README.md file was found, but it appears to be insufficiently detailed.
             contextService.buildContext()
         );
     }
+
+    @PostMapping("/clear-context")
+public ResponseEntity<Void> clearContext() {
+
+    contextService.clear();
+
+    return ResponseEntity.ok().build();
+}
 }

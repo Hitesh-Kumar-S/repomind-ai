@@ -1102,6 +1102,10 @@ function analyzeProject() {
 
     document.getElementById("chatBox").innerHTML = "";
 
+    fetch("/clear-context", {
+        method: "POST"
+    });
+
     setLoadingState(true);
     analyzeBtn.textContent = "Analyzing...";
     copyRow.style.display = "none";
@@ -1148,18 +1152,75 @@ const loadingInterval = setInterval(() => {
     });
 }
 
+function copyToClipboard(text, onSuccess, onFailure) {
+
+    if (navigator.clipboard && window.isSecureContext) {
+
+        navigator.clipboard.writeText(text)
+            .then(onSuccess)
+            .catch(() => fallbackCopy(text, onSuccess, onFailure));
+
+    } else {
+
+        fallbackCopy(text, onSuccess, onFailure);
+    }
+}
+
+function fallbackCopy(text, onSuccess, onFailure) {
+
+    const textarea = document.createElement("textarea");
+
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+
+    document.body.appendChild(textarea);
+
+    textarea.focus();
+    textarea.select();
+
+    try {
+
+        const success = document.execCommand("copy");
+
+        if (success) {
+            onSuccess();
+        } else {
+            onFailure();
+        }
+
+    } catch (err) {
+
+        onFailure();
+
+    } finally {
+
+        document.body.removeChild(textarea);
+    }
+}
+
 function copyResult() {
+
     const result = document.getElementById("result");
     const copyBtn = document.getElementById("copyBtn");
+
     const text = result.textContent;
 
-    navigator.clipboard.writeText(text).then(() => {
-        copyBtn.textContent = "✅ Copied!";
-        setTimeout(() => { copyBtn.textContent = "📋 Copy"; }, 1500);
-    }).catch(() => {
-        copyBtn.textContent = "❌ Failed";
-        setTimeout(() => { copyBtn.textContent = "📋 Copy"; }, 1500);
-    });
+    copyToClipboard(
+        text,
+        () => {
+            copyBtn.textContent = "✅ Copied!";
+            setTimeout(() => {
+                copyBtn.textContent = "📋 Copy";
+            }, 1500);
+        },
+        () => {
+            copyBtn.textContent = "❌ Failed";
+            setTimeout(() => {
+                copyBtn.textContent = "📋 Copy";
+            }, 1500);
+        }
+    );
 }
 
 function toggleTheme() {
@@ -1189,11 +1250,23 @@ function addMessage(role, text, isTyping = false) {
         copyMsgBtn.classList.add("msg-copy-btn");
         copyMsgBtn.textContent = "Copy";
         copyMsgBtn.onclick = () => {
-            navigator.clipboard.writeText(bubble.innerText).then(() => {
-                copyMsgBtn.textContent = "✅ Copied!";
-                setTimeout(() => { copyMsgBtn.textContent = "Copy"; }, 1500);
-            });
-        };
+
+    copyToClipboard(
+        bubble.innerText,
+        () => {
+            copyMsgBtn.textContent = "✅ Copied!";
+            setTimeout(() => {
+                copyMsgBtn.textContent = "Copy";
+            }, 1500);
+        },
+        () => {
+            copyMsgBtn.textContent = "❌ Failed";
+            setTimeout(() => {
+                copyMsgBtn.textContent = "Copy";
+            }, 1500);
+        }
+    );
+};
         wrapper.appendChild(copyMsgBtn);
     }
 
@@ -1250,6 +1323,12 @@ document.addEventListener("DOMContentLoaded", () => {
             sendMessage();
         }
     });
+});
+
+window.addEventListener("beforeunload", () => {
+
+    navigator.sendBeacon("/clear-context");
+
 });
 </script>
 
