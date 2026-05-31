@@ -994,28 +994,35 @@ body.dark .chat-input-area {
 <ul>
     <li>
         <p class="mode-text">
-            <span class="hl">Accurate Mode</span> →
-            Uses the project <span class="hl">README</span> as the primary source
-            and provides reliable, project-grounded answers.
-            Best for factual details and interview preparation.
+            <span class="hl">Repository Mode</span> →
+            Answers are based primarily on the repository's
+            README, structure, and important files.
+
+            Best for:
+            project features, tech stack, architecture,
+            implementation details, and interview preparation.
         </p>
     </li>
 
     <li>
         <p class="mode-text">
-            <span class="hl">Detailed Mode</span> →
-            Uses AI knowledge beyond the README for deeper explanations,
-            comparisons, architecture understanding,
-            and improvement suggestions.
-        </p>
+    <span class="hl">AI Expert Mode</span> →
+    Combines repository context with AI knowledge
+    for deeper explanations and insights.
+
+    Best for:
+    architecture understanding, technology comparisons,
+    improvement suggestions, technical deep-dives,
+    and learning concepts.
+</p>
     </li>
 
     <li>
-        <p class="mode-text">
-            Image uploads are currently not supported in the chat.
-            Please ask questions using text only.
-        </p>
-    </li>
+    <p class="mode-text">
+        Image uploads are currently not supported.
+        Please use text-based questions in English only.
+    </p>
+</li>
 </ul>
 
 <div class="chat-info-note">
@@ -1030,8 +1037,8 @@ body.dark .chat-input-area {
         <div class="mode-toggle-wrapper">
             <div class="mode-toggle" id="modeToggle" onclick="toggleMode()">
                 <div class="mode-slider"></div>
-                <span class="mode-label" id="labelStrict">Accurate</span>
-                <span class="mode-label" id="labelSmart">Detailed</span>
+                <span class="mode-label" id="labelStrict">Repository Mode</span>
+                <span class="mode-label" id="labelSmart">AI Expert Mode</span>
             </div>
         </div>
 

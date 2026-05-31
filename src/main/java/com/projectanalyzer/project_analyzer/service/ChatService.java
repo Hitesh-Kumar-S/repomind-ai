@@ -25,6 +25,52 @@ public class ChatService {
 
     public String chat(String question, boolean strictMode, String context) {
 
+         String normalized =
+            question.trim().toLowerCase();
+
+    // 👋 Greetings
+
+    if (normalized.matches(
+            "^(hi|hii|hiii|hello|hey|good morning|good afternoon|good evening)$"
+    )) {
+
+        return """
+👋 Hello!
+
+I'm RepoMind AI.
+
+I can help you understand the analyzed repository, explain its architecture, technologies, implementation details, and answer project-related questions.
+
+What would you like to know?
+""";
+    }
+
+    // 😊 Thanks
+
+    if (normalized.matches(
+            "^(thanks|thank you|thx)$"
+    )) {
+
+        return """
+😊 You're welcome!
+
+Feel free to ask more questions about the repository anytime.
+""";
+    }
+
+    // 👋 Goodbye
+
+    if (normalized.matches(
+            "^(bye|goodbye|see you)$"
+    )) {
+
+        return """
+👋 Goodbye!
+
+Thanks for using RepoMind AI. Happy coding!
+""";
+    }
+
         String prompt = strictMode
                 ? buildStrictPrompt(context, question)
                 : buildSmartPrompt(context, question);
