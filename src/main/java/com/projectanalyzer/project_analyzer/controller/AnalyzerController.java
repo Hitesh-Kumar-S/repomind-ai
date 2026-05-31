@@ -3,7 +3,6 @@ package com.projectanalyzer.project_analyzer.controller;
 import jakarta.servlet.http.HttpSession;
 import com.projectanalyzer.project_analyzer.model.ContextData;
 import com.projectanalyzer.project_analyzer.service.BitbucketService;
-import com.projectanalyzer.project_analyzer.service.ContextService;
 import com.projectanalyzer.project_analyzer.service.GitHubService;
 import com.projectanalyzer.project_analyzer.service.GitLabService;
 import com.projectanalyzer.project_analyzer.service.GroqLLMService;
@@ -27,16 +26,11 @@ public class AnalyzerController {
     @Autowired
     private GroqLLMService groqllmService;
 
-    @Autowired
-    private ContextService contextService;
-
     @PostMapping("/analyze")
     public String analyzeProject(
             @RequestBody String repoUrl,
             HttpSession session
     ) {
-
-        contextService.clear();
 
         String readme;
         String structure;
@@ -166,9 +160,9 @@ session.setAttribute(
     }
 
     @PostMapping("/clear-context")
-public ResponseEntity<Void> clearContext() {
+public ResponseEntity<Void> clearContext(HttpSession session) {
 
-    contextService.clear();
+    session.removeAttribute("repoContext");
 
     return ResponseEntity.ok().build();
 }

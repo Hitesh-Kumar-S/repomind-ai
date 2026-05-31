@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import com.projectanalyzer.project_analyzer.service.ChatService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import com.projectanalyzer.project_analyzer.service.ContextService;
 
 @RestController
 @CrossOrigin
@@ -16,14 +15,10 @@ public class ChatController {
     @Autowired
     private ChatService chatService;
 
-    private final ContextService contextService;
-
     public ChatController(
-        ChatService chatService,
-        ContextService contextService
+        ChatService chatService
 ) {
     this.chatService = chatService;
-    this.contextService = contextService;
 }
 
     @PostMapping("/chat")

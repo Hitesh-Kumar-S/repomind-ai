@@ -7,42 +7,10 @@ import org.springframework.stereotype.Service;
 public class ChatService {
 
     @Autowired
-    private ContextService contextService;
-
-    @Autowired
     private GroqLLMService groqService;
 
     @Autowired
     private OpenRouterLLMService openRouterService;
-
-    // 🔥 PRIORITY LIMITS
-    private static final int README_LIMIT = 12000;
-    private static final int STRUCTURE_LIMIT = 3000;
-    private static final int KEYFILES_LIMIT = 3000;
-
-    // 🔧 Trim helper
-    private String trim(String text, int limit) {
-        if (text == null) return "";
-        return text.length() > limit ? text.substring(0, limit) : text;
-    }
-
-    // 🔥 Build SMART context (NEW)
-    private String buildSmartContext() {
-        String readme = trim(contextService.getReadme(), README_LIMIT);
-        String structure = trim(contextService.getRepoStructure(), STRUCTURE_LIMIT);
-        String keyFiles = trim(contextService.getKeyFiles(), KEYFILES_LIMIT);
-
-        return """
-README:
-%s
-
-STRUCTURE:
-%s
-
-KEY FILES:
-%s
-""".formatted(readme, structure, keyFiles);
-    }
 
     // 🔥 Clean response
     private String cleanResponse(String response) {
